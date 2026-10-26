@@ -18,8 +18,8 @@ public sealed class OpenMeteoWeatherProvider(HttpClient http) : IWeatherProvider
 
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-    /// <summary>Three days of hours, for the Hourly tab.</summary>
-    const int HourCount = 72;
+    /// <summary>The API's maximum, for the Hourly tab: 16 days of hours from now, cut to the daily forecast's days.</summary>
+    const int HourCount = 384;
 
     public async Task<Forecast> GetForecastAsync(WeatherLocation location, CancellationToken cancellationToken = default)
     {
@@ -27,7 +27,7 @@ public sealed class OpenMeteoWeatherProvider(HttpClient http) : IWeatherProvider
         var url = $"{Endpoint}?latitude={Coord(location.Latitude)}&longitude={Coord(location.Longitude)}&timezone=auto"
             + $"&current={CurrentVariables}"
             + $"&minutely_15={Minutely15Variables}&past_minutely_15=1&forecast_minutely_15=7"
-            + $"&hourly={HourlyVariables}&forecast_hours={HourCount + 1}"
+            + $"&hourly={HourlyVariables}&forecast_hours={HourCount}"
             + $"&daily={DailyVariables}&forecast_days=16";
 
         var response = await SendAsync(url, OpenMeteoJsonContext.Default.ForecastResponse, cancellationToken);
@@ -35,13 +35,14 @@ public sealed class OpenMeteoWeatherProvider(HttpClient http) : IWeatherProvider
             throw new WeatherProviderException("Služba počasí vrátila neúplnou předpověď.");
 
         var localNow = DateTime.SpecifyKind(DateTime.UtcNow.AddSeconds(response.UtcOffsetSeconds), DateTimeKind.Unspecified);
+        var days = MapDays(response.Daily);
         return new Forecast(
             location,
             localNow,
             MapCurrent(response.Current),
-            MapHours(response.Hourly),
+            MapHours(response.Hourly, days.Count > 0 ? days[^1].Date : DateOnly.MaxValue),
             MapMinutes(response.Minutely15, localNow),
-            MapDays(response.Daily));
+            days);
     }
 
     public async Task<IReadOnlyList<LocationSummary>> GetSummariesAsync(IReadOnlyList<WeatherLocation> locations, CancellationToken cancellationToken = default)
@@ -82,11 +83,14 @@ public sealed class OpenMeteoWeatherProvider(HttpClient http) : IWeatherProvider
         c.UvIndex ?? 0);
 
     // The API's precipitation and snowfall are totals for the hour ending at each time; the app's are for the
-    // hour starting at it (as Azure Maps reports them), so they come from the next entry. Hence one hour more
-    // is requested than shown.
-    static List<HourForecast> MapHours(HourlyBlock h) =>
-        h.Time.Take(HourCount).Select((time, i) => new HourForecast(
-            ParseTime(time),
+    // hour starting at it (as Azure Maps reports them), so they come from the next entry, and the last entry isn't
+    // shown itself. The hours reach about a day past the daily forecast, ending without data, so they stop after
+    // its last day.
+    static List<HourForecast> MapHours(HourlyBlock h, DateOnly lastDay) =>
+        h.Time.Take(h.Time.Length - 1).Select(ParseTime)
+            .TakeWhile((time, i) => DateOnly.FromDateTime(time) <= lastDay && h.Temperature.ElementAtOrDefault(i) is not null)
+            .Select((time, i) => new HourForecast(
+            time,
             At(h.Temperature, i),
             At(h.ApparentTemperature, i),
             At(h.WeatherCode, i),

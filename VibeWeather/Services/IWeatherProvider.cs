@@ -4,7 +4,7 @@ namespace VibeWeather.Services;
 
 public interface IWeatherProvider
 {
-    /// <summary>Full forecast: current conditions, the next 60 (or 120) minutes, next 72 hours and 16 days (15 from Azure Maps).</summary>
+    /// <summary>Full forecast: current conditions, the next 60 (or 120) minutes, hours up to 16 days ahead (10 from Azure Maps) and 16 days (15 from Azure Maps).</summary>
     Task<Forecast> GetForecastAsync(WeatherLocation location, CancellationToken cancellationToken = default);
 
     /// <summary>Like <see cref="GetForecastAsync"/>, but never a cached copy: for checks that must use data from right now.</summary>

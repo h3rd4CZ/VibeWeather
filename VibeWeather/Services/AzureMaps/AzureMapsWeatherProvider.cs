@@ -7,7 +7,7 @@ namespace VibeWeather.Services.AzureMaps;
 /// <summary>
 /// Weather from the Azure Maps Weather API (https://learn.microsoft.com/rest/api/maps/weather), authenticated
 /// with the subscription key the user enters in Settings. A forecast is four billable requests (current
-/// conditions, 72 hours, 15 days, and the minute forecast); a location summary is one.
+/// conditions, 240 hours, 15 days, and the minute forecast); a location summary is one.
 /// </summary>
 public sealed class AzureMapsWeatherProvider(HttpClient http, WeatherSourceSettings settings) : IWeatherProvider
 {
@@ -27,7 +27,7 @@ public sealed class AzureMapsWeatherProvider(HttpClient http, WeatherSourceSetti
 
         var currentTask = GetAsync(key, $"/weather/currentConditions/json?{ApiVersion}&{query}&unit=metric&details=true&{Language}",
             AzureMapsJsonContext.Default.CurrentConditionsResponse, cancellationToken);
-        var hourlyTask = GetAsync(key, $"/weather/forecast/hourly/json?{ApiVersion}&{query}&unit=metric&duration=72",
+        var hourlyTask = GetAsync(key, $"/weather/forecast/hourly/json?{ApiVersion}&{query}&unit=metric&duration=240",
             AzureMapsJsonContext.Default.HourlyForecastResponse, cancellationToken);
         var dailyTask = GetAsync(key, $"/weather/forecast/daily/json?{ApiVersion}&{query}&unit=metric&duration=15",
             AzureMapsJsonContext.Default.DailyForecastResponse, cancellationToken);
@@ -129,8 +129,8 @@ public sealed class AzureMapsWeatherProvider(HttpClient http, WeatherSourceSetti
         IReadOnlyList<MinutePrecip> minutes, DateTime localNow)
     {
         var thisHour = localNow.Date.AddHours(localNow.Hour);
-        // Three days in all, for the Hourly tab.
-        var next = hourly.Where(h => h.Date.DateTime > thisHour).Take(71).ToList();
+        // Ten days in all (the service's longest hourly forecast), for the Hourly tab.
+        var next = hourly.Where(h => h.Date.DateTime > thisHour).Take(239).ToList();
         var wettest = minutes.Take(60).MaxBy(m => m.Intensity);
         var nowHour = new HourForecast(
             thisHour, cur.Temp, cur.FeelsLike, cur.Code, cur.IsDay,
