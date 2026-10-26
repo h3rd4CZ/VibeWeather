@@ -160,7 +160,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px 14px;
-    padding: 4px 12px 10px;
+    padding: 4px 18px 16px;
     font-size: 12.5px;
     color: var(--mut);
 }
@@ -230,4 +230,76 @@
 .stat-value {
     font-size: 17px;
     font-weight: 500;
+}
+
+/* Under the chart: the days along the whole chart, and the thumb on the part of it on screen (moved by app.js). */
+.scrubber {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 18px 16px;
+}
+
+.scrub-days {
+    position: relative;
+    height: 28px;
+}
+
+/* Each day over its share of the track; a tap goes to its first hour. */
+.scrub-day {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 500 10px var(--font-mono);
+    color: var(--mut);
+    white-space: nowrap;
+}
+
+    /* The day at the chart's left edge. */
+    .scrub-day.current {
+        color: var(--ink);
+        font-weight: 700;
+    }
+
+.scrub-date {
+    font-size: 9.5px;
+    opacity: .75;
+}
+
+/* Taps and drags here move the chart, not the page. */
+.scrub-track {
+    position: relative;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--dry);
+    touch-action: none;
+}
+
+/* Midnight between two days. */
+.scrub-tick {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    width: 1px;
+    background: var(--mut);
+    opacity: .4;
+}
+
+.scrub-thumb {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    min-width: 12px;
+    border: 2px solid var(--acc);
+    border-radius: 10px;
+    background: var(--acc-soft);
+    touch-action: none;
 }

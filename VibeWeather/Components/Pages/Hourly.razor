@@ -1,53 +1,57 @@
 @page "/hourly"
+@using System.Globalization
+@inject IJSRuntime JS
 
 <div class="stack">
     <div class="page-intro">
-        <span class="mono-label">PŘÍŠTÍ 3 DNY</span>
+        <span class="mono-label">@Weather.HourHeading</span>
         <h1 class="page-title">@Weather.HourHeadline</h1>
     </div>
 
-    <section class="card hours-scroll">
-        <div class="hours-track" style="width:@(Weather.HourTrackWidth)px">
-            <div class="hours-columns">
-                @foreach (var col in Weather.HourColumns)
-                {
-                    <div class="hour-col @(col.Selected ? "selected" : "") @(col.Day is null ? "" : "day-start")">
-                        @if (col.Day is not null)
-                        {
-                            <span class="hour-day">@col.Day</span>
-                        }
-                        <span class="hour-label">@col.Label</span>
-                        <WeatherIcon Condition="col.Condition" Class="hour-icon" />
-                        <span class="hour-temp" style="top:@(col.TempTop)px">@col.Temp</span>
-                        @if (col.Precip is { } bar)
-                        {
-                            <span class="hour-amount">@col.Amount</span>
-                            <span class="hour-bar" style="height:@(bar.Height)px;background:@bar.Color"></span>
-                        }
-                        <span class="hour-pop @(col.PopHigh ? "high" : "")">@col.Pop</span>
-                        <span class="hour-wind">
-                            <span class="wind-arrow" style="transform:rotate(@(col.WindTo)deg)">
-                                <Icon Path="@WeatherIcons.WindArrow" Size="13" StrokeWidth="2.2" />
+    <section class="card">
+        <div class="hours-scroll" @ref="scroller">
+            <div class="hours-track" style="width:@(Weather.HourTrackWidth)px">
+                <div class="hours-columns">
+                    @foreach (var col in Weather.HourColumns)
+                    {
+                        <div class="hour-col @(col.Selected ? "selected" : "") @(col.Day is null ? "" : "day-start")">
+                            @if (col.Day is not null)
+                            {
+                                <span class="hour-day">@col.Day</span>
+                            }
+                            <span class="hour-label">@col.Label</span>
+                            <WeatherIcon Condition="col.Condition" Class="hour-icon" />
+                            <span class="hour-temp" style="top:@(col.TempTop)px">@col.Temp</span>
+                            @if (col.Precip is { } bar)
+                            {
+                                <span class="hour-amount">@col.Amount</span>
+                                <span class="hour-bar" style="height:@(bar.Height)px;background:@bar.Color"></span>
+                            }
+                            <span class="hour-pop @(col.PopHigh ? "high" : "")">@col.Pop</span>
+                            <span class="hour-wind">
+                                <span class="wind-arrow" style="transform:rotate(@(col.WindTo)deg)">
+                                    <Icon Path="@WeatherIcons.WindArrow" Size="13" StrokeWidth="2.2" />
+                                </span>
+                                @col.Wind
                             </span>
-                            @col.Wind
-                        </span>
-                    </div>
-                }
+                        </div>
+                    }
+                </div>
+                <svg class="hours-chart" width="@Weather.HourTrackWidth" height="280" aria-hidden="true">
+                    @* The curve and its area take each hour's temperature colour. *@
+                    <defs>
+                        <linearGradient id="hour-temp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="@Weather.HourTrackWidth" y2="0">
+                            @foreach (var stop in Weather.HourLineStops)
+                            {
+                                <stop offset="@(stop.Offset)%" style="stop-color:@stop.Color"></stop>
+                            }
+                        </linearGradient>
+                    </defs>
+                    <path class="area" d="@Weather.HourArea"></path>
+                    <path class="line" d="@Weather.HourLine"></path>
+                    <circle class="dot" cx="@Weather.SelectedX" cy="@Weather.SelectedY" r="5.5" style="stroke:@Weather.TempColor"></circle>
+                </svg>
             </div>
-            <svg class="hours-chart" width="@Weather.HourTrackWidth" height="280" aria-hidden="true">
-                @* The curve and its area take each hour's temperature colour. *@
-                <defs>
-                    <linearGradient id="hour-temp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="@Weather.HourTrackWidth" y2="0">
-                        @foreach (var stop in Weather.HourLineStops)
-                        {
-                            <stop offset="@(stop.Offset)%" style="stop-color:@stop.Color"></stop>
-                        }
-                    </linearGradient>
-                </defs>
-                <path class="area" d="@Weather.HourArea"></path>
-                <path class="line" d="@Weather.HourLine"></path>
-                <circle class="dot" cx="@Weather.SelectedX" cy="@Weather.SelectedY" r="5.5" style="stroke:@Weather.TempColor"></circle>
-            </svg>
         </div>
         @* Bar colours: one hue per kind of precipitation, deeper as it gets heavier; then the wind's unit. *@
         <div class="legend">
@@ -58,6 +62,33 @@
             <span class="legend-item"><Icon Path="@WeatherIcons.WindArrow" Size="12" StrokeWidth="2.2" />Vítr, @Weather.WindUnit</span>
         </div>
     </section>
+
+    @if (Weather.HourDays.Count > 1)
+    {
+        @* Moves along the chart by day; app.js keeps the thumb on the part of the chart on screen. *@
+        <section class="card scrubber" @ref="scrubber">
+            <div class="scrub-days">
+                @foreach (var day in Weather.HourDays)
+                {
+                    <button type="button" class="scrub-day" data-column="@day.FirstColumn" style="left:@(day.Left)%;width:@(day.Width)%"
+                            aria-label="@day.Weekday @day.DayOfMonth.">
+                        @if (day.Labelled)
+                        {
+                            <span>@day.Weekday</span>
+                            <span class="scrub-date">@day.DayOfMonth</span>
+                        }
+                    </button>
+                }
+            </div>
+            <div class="scrub-track">
+                @foreach (var day in Weather.HourDays.Skip(1))
+                {
+                    <span class="scrub-tick" style="left:@(day.Left)%"></span>
+                }
+                <div class="scrub-thumb"></div>
+            </div>
+        </section>
+    }
 
     <section class="card hour-detail">
         <div class="hour-detail-head">
@@ -81,4 +112,28 @@
 
 @code {
     [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+
+    /// <summary>"2026-10-28" (from a day in "16 dní"): the chart opens at that day's first hour.</summary>
+    [SupplyParameterFromQuery] public string? Day { get; set; }
+
+    ElementReference scroller, scrubber;
+    // The Day the chart was last scrolled for; "" before the first render.
+    string? shownDay = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Weather.HourDays.Count > 1)
+            await JS.InvokeVoidAsync("vibeWeather.hourScrubber.attach", scroller, scrubber);
+        if (Day == shownDay) return;
+        // A first render starts at now anyway; later, the tab bar after a day link goes back to now too.
+        int column = FirstColumn(Day);
+        if (column > 0 || !firstRender)
+            await JS.InvokeVoidAsync("vibeWeather.hourScrubber.scrollToColumn", scroller, column, !firstRender);
+        shownDay = Day;
+    }
+
+    /// <summary>The first column of the day "yyyy-MM-dd" when the chart has it; else 0 (now).</summary>
+    int FirstColumn(string? day) =>
+        DateOnly.TryParseExact(day, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+        && Weather.HourDays.FirstOrDefault(d => d.Date == date) is { } found ? found.FirstColumn : 0;
 }
