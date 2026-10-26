@@ -33,7 +33,7 @@
 /* Touch target for the bar details: vertical swipes still scroll the page, horizontal drags pick bars. */
 .chart {
     position: relative;
-    height: 124px;
+    height: 132px;
     touch-action: pan-y;
     user-select: none;
 }
@@ -43,6 +43,7 @@
         pointer-events: none;
     }
 
+/* Positions are set inline, on the reflectivity scale (see ForecastView.MinuteGrid). */
 .gridline {
     position: absolute;
     left: 0;
@@ -50,28 +51,12 @@
     border-top: 1px dashed var(--line);
 }
 
-    .gridline.moderate {
-        bottom: 52px;
-    }
-
-    .gridline.heavy {
-        bottom: 98px;
-    }
-
 .grid-label {
     position: absolute;
     right: 0;
     font: 500 10.5px var(--font-mono);
     color: var(--mut);
 }
-
-    .grid-label.moderate {
-        bottom: 54px;
-    }
-
-    .grid-label.heavy {
-        bottom: 100px;
-    }
 
 .bars {
     position: absolute;
@@ -92,19 +77,17 @@
         opacity: .35;
     }
 
+/* Between the picked bar's top and the details; its bottom and height are set inline. */
 .cursor {
     position: absolute;
-    top: 0;
-    bottom: 0;
     width: 1px;
     background: var(--ink);
     opacity: .3;
 }
 
-/* Details of the picked bar, at the top of the chart above it. */
+/* Details of the picked bar, above the tallest bar (bottom set inline); over tall bars it rises above the chart. */
 .tip {
     position: absolute;
-    top: 0;
     z-index: 1;
     display: flex;
     flex-direction: column;

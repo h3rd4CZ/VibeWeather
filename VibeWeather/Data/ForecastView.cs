@@ -24,6 +24,8 @@ public sealed class ForecastView
     /// middle as a percentage of the chart's width. Strength is how heavy it is, 0 (dry) to 1, on the bars' height scale.
     /// </summary>
     public sealed record BarInfo(string Time, string Rate, string? Snow, string Kind, string KindColor, string Reflectivity, string Center, double Strength);
+    /// <summary>A dashed line across the Next hour chart, Bottom px above its foot, labelled "20 dBZ".</summary>
+    public sealed record GridLine(string Label, int Bottom);
 
     /// <summary>A colour along a gradient, at Offset percent of its length.</summary>
     public sealed record GradientStop(string Offset, string Color);
@@ -52,6 +54,10 @@ public sealed class ForecastView
     public sealed record DayPrecipLine(string Name, string Color, string Amount);
 
     const int HourColumnWidth = 56;
+    // The Next hour bars stand on a radar reflectivity scale from 0 to MaxDbz, which is BarArea px tall.
+    const double MaxDbz = 60;
+    const int BarArea = 116;
+    static readonly int[] GridDbz = [20, 40, 60];
     const string DryColor = "var(--dry)";
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     static readonly CultureInfo Cs = Czech.Culture;
@@ -91,6 +97,10 @@ public sealed class ForecastView
     public IReadOnlyList<Bar> MinuteBars { get; }
     /// <summary>Details for each of <see cref="MinuteBars"/>, in the same order.</summary>
     public IReadOnlyList<BarInfo> MinuteBarInfo { get; }
+    /// <summary>The height of the tallest of <see cref="MinuteBars"/> (px): the bar details are shown above it.</summary>
+    public int MinuteBarsTop { get; }
+    /// <summary>The reflectivity scale behind <see cref="MinuteBars"/>, up to <see cref="MaxDbz"/>.</summary>
+    public IReadOnlyList<GridLine> MinuteGrid { get; }
     public IReadOnlyList<LegendItem> Legend { get; }
     public string ReadingTop { get; }
     public string ReadingValue { get; }
@@ -255,12 +265,16 @@ public sealed class ForecastView
             : $"{(IsMixed ? "SMÍŠENÉ" : Upper(NameAt(wet[0])))} · {D1(total)} MM";
         // At most 60 bars, so two hours get one bar per 2 minutes rather than hairlines.
         var barMins = BarMinutes(mins);
+        // The Now tab's preview, on the same reflectivity scale as the Next hour bars: 60 dBZ fills its 30px.
         Spark = barMins.Select(m => IsWet(m)
-            ? new Bar(Round(3 + 27 * Math.Min(1, Math.Sqrt(m.Intensity / 6))), PrecipColor(m.Intensity, m.Type))
+            ? new Bar(Math.Max(3, Round(30 * DbzScale(m))), PrecipColor(m.Intensity, m.Type))
             : new Bar(2, DryColor)).ToList();
+        // Heights follow the reflectivity, so heavy rain and storms still fit under the 60 dBZ line; wet bars stay visible.
         MinuteBars = barMins.Select(m => IsWet(m)
-            ? new Bar(Round(4 + 112 * Math.Min(1, Math.Sqrt(m.Intensity / 6))), PrecipColor(m.Intensity, m.Type))
+            ? new Bar(Math.Max(4, Round(BarArea * DbzScale(m))), PrecipColor(m.Intensity, m.Type))
             : new Bar(2, DryColor)).ToList();
+        MinuteBarsTop = MinuteBars.Select(b => b.Height).DefaultIfEmpty(0).Max();
+        MinuteGrid = [.. GridDbz.Select(dbz => new GridLine($"{dbz} dBZ", Round(BarArea * dbz / MaxDbz)))];
         int perBar = Math.Max(1, (int)Math.Ceiling(mins.Count / 60.0));
         MinuteBarInfo = barMins.Select((m, i) => new BarInfo(
             Time(now.AddMinutes(i * perBar)),
@@ -270,12 +284,14 @@ public sealed class ForecastView
             IsWet(m) ? PrecipColor(Math.Max(m.Intensity, 3), m.Type) : "var(--mut)",
             Reflectivity(m),
             Pct((i + 0.5) / barMins.Count),
-            IsWet(m) ? Math.Min(1, Math.Sqrt(m.Intensity / 6)) : 0)).ToList();
+            IsWet(m) ? DbzScale(m) : 0)).ToList();
         Legend = IsMixed ? types.Select(t => new LegendItem(PrecipName(t), PrecipColor(3, t))).ToList() : [];
-        ReadingTop = HasPrecip ? $"NEJSILNĚJŠÍ · {At(peak)}" : MinuteHeading;
-        ReadingValue = mins.Count == 0 ? $"{D1(0)} mm/h" : Rate(mins[peak]);
-        ReadingCategory = HasPrecip ? KindAt(peak) : "Sucho";
-        ReadingColor = HasPrecip ? PrecipColor(Math.Max(mins[peak].Intensity, 3), mins[peak].Type) : "var(--mut)";
+        // What falls now; the heaviest is in the summary and the events below.
+        bool wetNow = mins.Count > 0 && IsWet(mins[0]);
+        ReadingTop = $"TEĎ · {Time(now)}";
+        ReadingValue = mins.Count == 0 ? $"{D1(0)} mm/h" : Rate(mins[0]);
+        ReadingCategory = wetNow ? KindAt(0) : "Sucho";
+        ReadingColor = wetNow ? PrecipColor(Math.Max(mins[0].Intensity, 3), mins[0].Type) : "var(--mut)";
         Events = HasPrecip
             ?
             [
@@ -597,9 +613,15 @@ public sealed class ForecastView
     {
         if (m.Dbz is { } measured) return measured > 0 ? $"{Round(measured)} dBZ" : "–";
         if (!IsWet(m)) return "–";
-        double z = m.Type == PrecipType.Snow ? 2000 * m.Intensity * m.Intensity : 200 * Math.Pow(m.Intensity, 1.6);
-        return $"≈ {Round(10 * Math.Log10(z))} dBZ (odhad)";
+        return $"≈ {Round(EstimatedDbz(m))} dBZ (odhad)";
     }
+
+    static double EstimatedDbz(MinutePrecip m) =>
+        10 * Math.Log10(m.Type == PrecipType.Snow ? 2000 * m.Intensity * m.Intensity : 200 * Math.Pow(m.Intensity, 1.6));
+
+    /// <summary>The reflectivity (measured, else estimated) as a fraction of <see cref="MaxDbz"/>, 0 to 1.</summary>
+    static double DbzScale(MinutePrecip m) =>
+        IsWet(m) ? Math.Clamp((m.Dbz ?? EstimatedDbz(m)) / MaxDbz, 0, 1) : 0;
 
     static bool IsWet(HourForecast hour) => hour.Precipitation > WetMmPerHour;
 

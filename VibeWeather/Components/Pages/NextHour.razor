@@ -23,10 +23,11 @@
         @* Touch and drag along the chart: the bar under the finger shows its time, rate, kind and radar reflectivity. *@
         <div class="chart" @ref="chart" @onpointerdown="TouchAsync" @onpointermove="Move"
              @onpointerup="ReleaseAsync" @onpointercancel="ReleaseAsync">
-            <div class="gridline moderate"></div>
-            <div class="gridline heavy"></div>
-            <span class="grid-label moderate">MÍRNÝ</span>
-            <span class="grid-label heavy">SILNÝ</span>
+            @foreach (var line in Weather.MinuteGrid)
+            {
+                <div class="gridline" style="bottom:@(line.Bottom)px"></div>
+                <span class="grid-label" style="bottom:@(line.Bottom + 2)px">@line.Label</span>
+            }
             <div class="bars">
                 @for (int i = 0; i < Weather.MinuteBars.Count; i++)
                 {
@@ -36,9 +37,13 @@
             </div>
             @if (Selected is { } info)
             {
-                <div class="cursor" style="left:@(info.Center)%"></div>
+                @* The details float just above the tallest bar, so they never hide one; the cursor joins them to the
+                   picked bar's top without crossing it. *@
+                int tipBottom = Weather.MinuteBarsTop + TipGap;
+                int barTop = Weather.MinuteBars[selected!.Value].Height + 2;
+                <div class="cursor" style="left:@(info.Center)%;bottom:@(barTop)px;height:@(Math.Max(0, tipBottom - barTop))px"></div>
                 @* Kept inside the chart: at the left edge it hangs right of the bar, at the right edge left of it. *@
-                <div class="tip" style="left:@(info.Center)%;transform:translateX(-@(info.Center)%)">
+                <div class="tip" style="left:@(info.Center)%;bottom:@(tipBottom)px;transform:translateX(-@(info.Center)%)">
                     <span class="tip-time">@info.Time</span>
                     <span class="tip-rate">@info.Rate</span>
                     @if (info.Snow is not null)
@@ -90,6 +95,8 @@
 
     // How long the details stay after the finger is lifted, to read them.
     static readonly TimeSpan ShowAfterRelease = TimeSpan.FromSeconds(4);
+    // Space between the tallest bar and the details above it (px).
+    const int TipGap = 8;
 
     ElementReference chart;
     double chartWidth;
