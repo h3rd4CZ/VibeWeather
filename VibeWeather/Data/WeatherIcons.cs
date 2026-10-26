@@ -19,6 +19,8 @@ public static class WeatherIcons
 {
     public const string Settings = "M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4";
     public const string Plus = "M12 5v14M5 12h14";
+    /// <summary>A map pin: the device's position, and the quick place picker.</summary>
+    public const string Pin = "M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zM12 7.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5";
     public const string Search = "M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14M20 20l-4-4";
     // Home tiles.
     public const string TileWind = "M3 8.5h10a2.5 2.5 0 1 0-2.5-2.5M3 12.5h15a3 3 0 1 1-3 3M3 16.5h7";

@@ -1,0 +1,90 @@
+@* The places to take the forecast for, as rows of the caller's .group-card (no wrapper, so the card's row dividers
+   apply): the device position first and set apart, as it's always there; then geofence places the device is inside;
+   then the most recently added cities. Used by Settings and the quick place picker. *@
+@implements IDisposable
+@inject WeatherState State
+@inject DisplaySettings Display
+
+@foreach (var (loc, fence) in Locations)
+{
+    var summary = State.Summaries.GetValueOrDefault(loc.Key);
+    <button type="button" class="row loc-row @(loc.IsDevice ? "device" : "")" @onclick="() => Select(loc, fence)">
+        <span class="loc-check @(loc.Key == State.SelectedKey ? "on" : "")">✓</span>
+        <div class="row-text">
+            <span class="loc-name-line">
+                @if (loc.IsDevice)
+                {
+                    <Icon Path="@WeatherIcons.Pin" Size="16" StrokeWidth="2" Class="loc-pin" />
+                }
+                <span class="loc-name">@loc.Name</span>
+                @if (fence is not null)
+                {
+                    <span class="chip-inside">UVNITŘ</span>
+                }
+            </span>
+            <span class="row-sub">@Subtitle(loc, fence, summary)</span>
+        </div>
+        <span class="loc-temp">@(summary is null ? "" : Display.Units.Temp(summary.Temp))</span>
+        @if (summary is not null)
+        {
+            <WeatherIcon Condition="WeatherCodes.Condition(summary.Code, summary.IsDay)" />
+        }
+        else
+        {
+            <span></span>
+        }
+    </button>
+}
+
+@code {
+    /// <summary>After a place is picked (its forecast loads in the background): Settings goes back, the picker closes.</summary>
+    [Parameter] public EventCallback OnSelected { get; set; }
+
+    static readonly WeatherLocation DevicePlaceholder = SelectionRules.Device;
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        await State.LoadSummariesAsync();
+    }
+
+    // The device row is always first; until a position is known it offers to use the device location.
+    // Then geofenced places the device is inside, then the most recently added cities (the rest are on the
+    // Locations page). Each place is listed once; a geofence row wins over the same saved city.
+    IEnumerable<(WeatherLocation Location, GeofencePlace? Fence)> Locations
+    {
+        get
+        {
+            var device = State.DeviceLocation ?? DevicePlaceholder;
+            var rows = new List<(WeatherLocation, GeofencePlace?)> { (device, null) };
+            var listed = new HashSet<string> { device.Key };
+            foreach (var fence in State.InsideGeofences)
+                if (listed.Add(fence.Place.Key)) rows.Add((fence.Place, fence));
+            foreach (var city in State.RecentLocations)
+                if (listed.Add(city.Key)) rows.Add((city, null));
+            return rows;
+        }
+    }
+
+    string Subtitle(WeatherLocation loc, GeofencePlace? fence, LocationSummary? summary)
+    {
+        var place = loc.IsDevice
+            ? (loc == DevicePlaceholder ? "Klepnutím použijete svou polohu" : "Aktuální poloha")
+            : fence is not null ? $"Zóna · {GeofenceManager.FormatRadius(fence.RadiusMeters)}"
+            : loc.Region;
+        var text = summary is null ? place : $"{place} · {WeatherCodes.Describe(summary.Code)}";
+        // The device row always tells when its position was found, so it's clear how current it is.
+        return loc.IsDevice && loc != DevicePlaceholder && State.DevicePositionTime is { } time ? $"{text} · {time}" : text;
+    }
+
+    // Hand over straight away; the main screen shows progress while the new forecast loads.
+    async Task Select(WeatherLocation loc, GeofencePlace? fence)
+    {
+        _ = fence is null ? State.SelectAsync(loc) : State.SelectFenceAsync(fence);
+        await OnSelected.InvokeAsync();
+    }
+
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

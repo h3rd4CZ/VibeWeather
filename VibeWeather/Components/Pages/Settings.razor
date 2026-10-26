@@ -27,32 +27,7 @@
         <section class="group">
             <span class="mono-label group-label">MÍSTA</span>
             <div class="group-card">
-                @foreach (var (loc, fence) in Locations)
-                {
-                    var summary = State.Summaries.GetValueOrDefault(loc.Key);
-                    <button type="button" class="row loc-row" @onclick="() => Select(loc, fence)">
-                        <span class="loc-check @(loc.Key == State.SelectedKey ? "on" : "")">✓</span>
-                        <div class="row-text">
-                            <span class="loc-name-line">
-                                <span class="loc-name">@loc.Name</span>
-                                @if (fence is not null)
-                                {
-                                    <span class="chip-inside">UVNITŘ</span>
-                                }
-                            </span>
-                            <span class="row-sub">@Subtitle(loc, fence, summary)</span>
-                        </div>
-                        <span class="loc-temp">@(summary is null ? "" : Units.Temp(summary.Temp))</span>
-                        @if (summary is not null)
-                        {
-                            <WeatherIcon Condition="WeatherCodes.Condition(summary.Code, summary.IsDay)" />
-                        }
-                        else
-                        {
-                            <span></span>
-                        }
-                    </button>
-                }
+                <PlaceList OnSelected="Close" />
                 <a href="locations" class="row manage-row">
                     <Icon Path="@WeatherIcons.Plus" Size="20" StrokeWidth="1.8" Class="manage-icon" />
                     <span class="manage-label">Přidat nebo odebrat místa</span>
@@ -446,26 +421,6 @@
         "Načítání předpovědi (simulace)",
         retry: State.RefreshAsync);
 
-    static readonly WeatherLocation DevicePlaceholder = SelectionRules.Device;
-
-    // The device row is always first; until a position is known it offers to use the device location.
-    // Then geofenced places the device is inside, then the most recently added cities (the rest are on the
-    // Locations page). Each place is listed once; a geofence row wins over the same saved city.
-    IEnumerable<(WeatherLocation Location, GeofencePlace? Fence)> Locations
-    {
-        get
-        {
-            var device = State.DeviceLocation ?? DevicePlaceholder;
-            var rows = new List<(WeatherLocation, GeofencePlace?)> { (device, null) };
-            var listed = new HashSet<string> { device.Key };
-            foreach (var fence in State.InsideGeofences)
-                if (listed.Add(fence.Place.Key)) rows.Add((fence.Place, fence));
-            foreach (var city in State.RecentLocations)
-                if (listed.Add(city.Key)) rows.Add((city, null));
-            return rows;
-        }
-    }
-
     enum Alarm { Precip, Morning, Severe }
 
     // Why an alarm couldn't be switched on (no location access, no Azure Maps key), shown under the switches.
@@ -560,29 +515,11 @@
         Severe.Changed += OnAlarmsChanged;
         Source.Changed += OnSourceChanged;
         if (await Source.GetAzureKeyAsync() is { Length: > 0 } key) azureKeyHint = Hint(key);
+        // The place list (PlaceList) loads the places' temperatures itself.
         await CheckBackgroundAsync();
-        await State.LoadSummariesAsync();
     }
 
-    string Subtitle(WeatherLocation loc, GeofencePlace? fence, LocationSummary? summary)
-    {
-        var place = loc.IsDevice
-            ? (loc == DevicePlaceholder ? "Klepnutím použijete svou polohu" : "Aktuální poloha")
-            : fence is not null ? $"Zóna · {GeofenceManager.FormatRadius(fence.RadiusMeters)}"
-            : loc.Region;
-        var text = summary is null ? place : $"{place} · {WeatherCodes.Describe(summary.Code)}";
-        // The device row always tells when its position was found, so it's clear how current it is.
-        return loc.IsDevice && loc != DevicePlaceholder && State.DevicePositionTime is { } time ? $"{text} · {time}" : text;
-    }
-
-    // Close straight away; the main screen shows progress while the new forecast loads.
-    async Task Select(WeatherLocation loc, GeofencePlace? fence)
-    {
-        _ = fence is null ? State.SelectAsync(loc) : State.SelectFenceAsync(fence);
-        await Close();
-    }
-
-    // Return to whichever tab opened Settings.
+    // Return to whichever tab opened Settings; also after a place is picked.
     async Task Close() => await JS.InvokeVoidAsync("history.back");
 
     void OnStateChanged() => InvokeAsync(StateHasChanged);

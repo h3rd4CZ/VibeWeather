@@ -1,0 +1,56 @@
+.loc-row {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto 28px;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+}
+
+.loc-check {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--acc);
+    opacity: 0;
+}
+
+    .loc-check.on {
+        opacity: 1;
+    }
+
+.loc-name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loc-name {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.loc-temp {
+    font-size: 22px;
+    font-weight: 400;
+}
+
+/* The device position, always first: tinted across the card's width (its 16 px padding) and marked with a pin. */
+.loc-row.device {
+    width: calc(100% + 32px);
+    margin: 0 -16px;
+    padding: 0 16px;
+    background: var(--acc-soft);
+}
+
+    .loc-row.device:first-child {
+        border-radius: 18px 18px 0 0;
+    }
+
+.loc-name-line ::deep .loc-pin {
+    flex: none;
+    color: var(--acc);
+}
