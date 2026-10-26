@@ -14,13 +14,18 @@ window.vibeWeather = {
             const track = scrubber.querySelector('.scrub-track');
             const thumb = scrubber.querySelector('.scrub-thumb');
 
+            // The thumb is as wide as the visible share of the chart, but at least 32 px to be grabbed; the chart's
+            // scroll range maps onto the track less the thumb's width, so both ends line up.
+            const thumbWidth = () => Math.max(32, track.clientWidth * Math.min(1, scroller.clientWidth / scroller.scrollWidth));
+            const range = () => ({ chart: scroller.scrollWidth - scroller.clientWidth, track: track.clientWidth - thumbWidth() });
+
             const update = () => {
-                const total = scroller.scrollWidth;
-                if (!total) return;
-                thumb.style.left = `${scroller.scrollLeft / total * 100}%`;
-                thumb.style.width = `${Math.min(1, scroller.clientWidth / total) * 100}%`;
-                // The day at the chart's left edge is the current one (56 px per hour column).
-                const at = Math.round(scroller.scrollLeft / 56);
+                if (!scroller.scrollWidth) return;
+                const r = range();
+                thumb.style.width = `${thumbWidth()}px`;
+                thumb.style.left = `${r.chart > 0 ? scroller.scrollLeft / r.chart * r.track : 0}px`;
+                // The day in the middle of the chart's visible part is the current one (56 px per hour column).
+                const at = Math.floor((scroller.scrollLeft + scroller.clientWidth / 2) / 56);
                 let current = null;
                 for (const day of scrubber.querySelectorAll('.scrub-day')) {
                     day.classList.remove('current');
@@ -41,7 +46,7 @@ window.vibeWeather = {
                 if (day) vibeWeather.hourScrubber.scrollToColumn(scroller, +day.dataset.column, true);
             });
 
-            // Dragging the thumb moves the chart by as much of its length as the thumb moves along the track.
+            // Dragging the thumb moves the chart by the same share of its scroll range.
             let drag = null;
             thumb.addEventListener('pointerdown', e => {
                 drag = { x: e.clientX, left: scroller.scrollLeft };
@@ -49,17 +54,20 @@ window.vibeWeather = {
                 e.stopPropagation();
             });
             thumb.addEventListener('pointermove', e => {
-                if (drag) scroller.scrollLeft = drag.left + (e.clientX - drag.x) / track.clientWidth * scroller.scrollWidth;
+                if (!drag) return;
+                const r = range();
+                if (r.track > 0) scroller.scrollLeft = drag.left + (e.clientX - drag.x) / r.track * r.chart;
             });
             const release = () => { drag = null; };
             thumb.addEventListener('pointerup', release);
             thumb.addEventListener('pointercancel', release);
 
+            // A tap beside the thumb moves the thumb's middle there.
             track.addEventListener('pointerdown', e => {
                 if (e.target === thumb) return;
-                const rect = track.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / rect.width * scroller.scrollWidth;
-                scroller.scrollTo({ left: x - scroller.clientWidth / 2, behavior: 'smooth' });
+                const r = range();
+                const x = e.clientX - track.getBoundingClientRect().left - thumbWidth() / 2;
+                if (r.track > 0) scroller.scrollTo({ left: x / r.track * r.chart, behavior: 'smooth' });
             });
         },
 

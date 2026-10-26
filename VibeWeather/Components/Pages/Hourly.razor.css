@@ -263,7 +263,7 @@
     white-space: nowrap;
 }
 
-    /* The day at the chart's left edge. */
+    /* The day in the middle of the chart's visible part. */
     .scrub-day.current {
         color: var(--ink);
         font-weight: 700;
@@ -293,11 +293,11 @@
     opacity: .4;
 }
 
+/* Position and width are set by app.js. */
 .scrub-thumb {
     position: absolute;
     top: 0;
     bottom: 0;
-    min-width: 12px;
     border: 2px solid var(--acc);
     border-radius: 10px;
     background: var(--acc-soft);
