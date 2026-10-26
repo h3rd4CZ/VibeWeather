@@ -35,7 +35,6 @@
     }
 
 .day-row {
-    position: relative;
     display: grid;
     grid-template-columns: 58px 34px 36px 42px minmax(0, 1fr) 42px;
     align-items: center;
@@ -203,18 +202,7 @@
     font-weight: 500;
 }
 
-/* A day the hourly forecast reaches: a tap opens it in "Po hodinách"; the › at the card's edge says so. */
+/* A day the hourly forecast reaches: a tap opens it in "Po hodinách". */
 .day.linked {
     cursor: pointer;
-}
-
-.day-go {
-    position: absolute;
-    top: 50%;
-    right: -12px;
-    transform: translateY(-50%);
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--mut);
 }
