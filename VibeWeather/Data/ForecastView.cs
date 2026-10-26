@@ -426,7 +426,8 @@ public sealed class ForecastView
             : "";
         DayRows = days.Select((d, i) => new DayRow(
             i == 0 ? "Dnes" : DayOfWeek(d.Date), d.Date.ToString("d. M.", Cs), WeatherCodes.Condition(d.Code, isDay: true, d.Sun),
-            d.Pop >= 20 ? $"{d.Pop}%" : "", Temp(d.Low), Temp(d.High), TemperatureColor(d.Low), TemperatureColor(d.High),
+            // The chance only where some falls; a dry day's chance would only add noise.
+            d.PrecipMm >= DayForecast.MinAmount ? $"{d.Pop}%" : "", Temp(d.Low), Temp(d.High), TemperatureColor(d.Low), TemperatureColor(d.High),
             Pct((d.Low - gmin) / range), Pct((d.High - d.Low) / range),
             IsToday: i == 0, NowLeft: Pct(Math.Clamp((cur.Temp - gmin) / range, 0, 1)),
             Open: i == 0,

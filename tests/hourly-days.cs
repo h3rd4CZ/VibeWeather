@@ -4,7 +4,7 @@
 #:include ../VibeWeather/Data/WeatherModels.cs
 #:include ../VibeWeather/Data/DisplayUnits.cs
 #:include ../VibeWeather/Data/Czech.cs
-// Checks ForecastView's hourly days (scrubber segments, heading, links from the daily rows): run with
+// Checks ForecastView's hourly days (scrubber segments, heading, links from the daily rows) and the daily rows' chance: run with
 // `dotnet run hourly-days.cs` from this folder. Exit code 1 on failure.
 using VibeWeather.Data;
 
@@ -15,15 +15,16 @@ void Check(string what, bool ok) { Console.WriteLine($"{(ok ? "ok  " : "FAIL")} 
 var now = new DateTime(2026, 10, 26, 20, 30, 0);
 var start = new DateTime(2026, 10, 26, 20, 0, 0);
 
-ForecastView View(int hourCount, int dayCount, Func<int, double>? precipitation = null)
+ForecastView View(int hourCount, int dayCount, Func<int, double>? precipitation = null, Func<DayForecast, DayForecast>? day = null)
 {
     var hours = Enumerable.Range(0, hourCount).Select(i => new HourForecast(
         start.AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, precipitation?.Invoke(i) ?? 0)).ToList();
     var days = Enumerable.Range(0, dayCount).Select(i =>
     {
         var date = DateOnly.FromDateTime(now).AddDays(i);
-        return new DayForecast(date, 1, 12, 4, 0, 10, 180, 1, 0,
+        var d = new DayForecast(date, 1, 12, 4, 0, 10, 180, 1, 0,
             date.ToDateTime(new TimeOnly(7, 0)), date.ToDateTime(new TimeOnly(17, 0)));
+        return day?.Invoke(d) ?? d;
     }).ToList();
     var current = new CurrentConditions(now, 10, 9, 1, false, 80, 5, 5, 8, 180, 1015, 10, 0);
     var forecast = new Forecast(new WeatherLocation("Ostrava", "Česko", 49.83, 18.28), now, current, hours, [], days);
@@ -55,6 +56,12 @@ Check("light rain: short bar", v.HourScrubBars[0] is { Column: 5, Y: "13.2", Hei
 Check("heavy rain: full bar", v.HourScrubBars[1] is { Column: 30, Y: "4.0", Height: "16.0" });
 Check("bars in the rain colour", v.HourScrubBars.All(b => b.Color.Contains(" 252)")));
 Check("dry hours: no bars", View(52, 4).HourScrubBars.Count == 0);
+
+// The daily rows give the chance of precipitation only for days when some falls.
+v = View(0, 3, day: d => d.Date.Day switch { 26 => d with { Pop = 40 }, 27 => d with { Pop = 40, PrecipMm = 1.2 }, _ => d with { Pop = 10, PrecipMm = 0.1 } });
+Check("dry day with a chance: no chance shown", v.DayRows[0].Pop == "");
+Check("wet day: chance shown", v.DayRows[1].Pop == "40%");
+Check("wet day with a low chance: shown too", v.DayRows[2].Pop == "10%");
 
 v = View(0, 3);
 Check("no hours: no days, no links", v.HourDays.Count == 0 && v.DayRows.All(d => d.HourlyLink is null));

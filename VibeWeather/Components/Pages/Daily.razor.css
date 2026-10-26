@@ -37,7 +37,7 @@
 .day-row {
     position: relative;
     display: grid;
-    grid-template-columns: 58px 26px 36px 42px minmax(0, 1fr) 42px;
+    grid-template-columns: 58px 34px 36px 42px minmax(0, 1fr) 42px;
     align-items: center;
     gap: 8px;
     min-height: 58px;
@@ -55,7 +55,7 @@
 }
 
 .day-date {
-    font: 500 11px var(--font-mono);
+    font: 500 13px var(--font-mono);
     color: var(--mut);
     white-space: nowrap;
 }
