@@ -1,4 +1,5 @@
 @page "/daily"
+@inject NavigationManager Navigation
 
 <div class="stack">
     <div class="page-intro">
@@ -10,7 +11,8 @@
         @foreach (var day in Weather.DayRows)
         {
             @* Wet days are tinted in their main kind's colour, more strongly the more falls. *@
-            <div class="day @(day.WetColor is null ? "" : "wet") @(day.NewWeek ? "new-week" : "")" style="@DayStyle(day)">
+            <div class="day @(day.WetColor is null ? "" : "wet") @(day.NewWeek ? "new-week" : "") @(day.HourlyLink is null ? "" : "linked")"
+                 style="@DayStyle(day)" @onclick="() => Open(day)">
                 <div class="day-row">
                     <div class="day-when">
                         <span class="day-name">@day.Name</span>
@@ -27,6 +29,10 @@
                         }
                     </div>
                     <span class="day-high">@day.High</span>
+                    @if (day.HourlyLink is not null)
+                    {
+                        <span class="day-go" aria-hidden="true">›</span>
+                    }
                 </div>
 
                 @* Left: a line per kind of precipitation with its amount. Right: the day's strongest wind. *@
@@ -71,6 +77,12 @@
 
 @code {
     [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+
+    // Days the hourly forecast reaches open "Po hodinách" there.
+    void Open(ForecastView.DayRow day)
+    {
+        if (day.HourlyLink is { } link) Navigation.NavigateTo(link);
+    }
 
     // Temperature colours for the range bar and values; for a wet day also its tint (see .day.wet).
     static string DayStyle(ForecastView.DayRow day) =>
