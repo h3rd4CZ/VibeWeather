@@ -1,0 +1,51 @@
+@* Layered 24×24 weather icon (see WeatherIcons); colours per layer come from .wicon in app.css. A sun or moon
+   behind the front cloud is cut by the cloud's outline, widened so a small gap separates them. *@
+<svg width="@Size" height="@Size" viewBox="0 0 24 24" fill="none" stroke-width="@F(StrokeWidth)"
+     stroke-linecap="round" stroke-linejoin="round" class="icon wicon @Class" aria-hidden="true">
+    @if (Art.Cutter is { } cutter)
+    {
+        <mask id="@maskId" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+            <rect width="24" height="24" fill="white"></rect>
+            <path d="@cutter" fill="black" stroke="black" stroke-width="@F(StrokeWidth + 2.4)"></path>
+        </mask>
+        <g mask="url(#@maskId)">
+            @foreach (var layer in Art.Layers.Where(l => l.Behind))
+            {
+                <path d="@layer.D" class="@ToneClass(layer.Tone)"></path>
+            }
+        </g>
+    }
+    @foreach (var layer in Art.Layers.Where(l => !l.Behind))
+    {
+        <path d="@layer.D" class="@ToneClass(layer.Tone)"></path>
+    }
+</svg>
+
+@code {
+    static int count;
+    // Unique per icon on the page, since several icons with masks are shown at once.
+    readonly string maskId = $"wicon-{Interlocked.Increment(ref count)}";
+
+    [Parameter, EditorRequired] public WeatherCondition Condition { get; set; }
+    [Parameter] public int Size { get; set; } = 24;
+    [Parameter] public double StrokeWidth { get; set; } = 1.6;
+    [Parameter] public string? Class { get; set; }
+
+    IconArt Art => WeatherIcons.For(Condition);
+
+    static string ToneClass(IconTone tone) => tone switch
+    {
+        IconTone.CloudBack => "t-cloud-back",
+        IconTone.Sun => "t-sun",
+        IconTone.SunDisc => "t-sun-disc",
+        IconTone.Moon => "t-moon",
+        IconTone.Star => "t-star",
+        IconTone.Rain => "t-rain",
+        IconTone.Snow => "t-snow",
+        IconTone.Bolt => "t-bolt",
+        IconTone.Fog => "t-fog",
+        _ => "t-cloud",
+    };
+
+    static string F(double x) => x.ToString(CultureInfo.InvariantCulture);
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, rain and snow: two rain-blue drops around a snow-blue flake. -->
+    <g fill="#BBC5D1">
+        <rect x="19" y="36" width="62" height="24" rx="12" />
+        <circle cx="40" cy="33" r="17" />
+        <circle cx="63" cy="39" r="12" />
+    </g>
+    <path d="M32 72l-4 12M72 72l-4 12" fill="none" stroke="#4D97DE" stroke-width="7" stroke-linecap="round" />
+    <path d="M50 70v16M43.1 74l13.8 8M43.1 82l13.8-8" fill="none" stroke="#5AAAC9" stroke-width="4.5" stroke-linecap="round" />
+</svg>

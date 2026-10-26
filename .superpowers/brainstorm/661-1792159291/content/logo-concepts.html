@@ -1,0 +1,106 @@
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- A: Sunrise V — a sun sinking into a V-shaped valley -->
+    <symbol id="a-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#15171C"/>
+      <circle cx="50" cy="41" r="12" fill="#DE8730"/>
+      <path d="M28,32 L50,74 L72,32" fill="none" stroke="#F1EFEA" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="a-mono" viewBox="0 0 100 100">
+      <circle cx="50" cy="41" r="12" fill="#fff"/>
+      <path d="M28,32 L50,74 L72,32" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- B: Vibe sun — a sun disc over shimmering waves -->
+    <symbol id="b-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#DE8730"/>
+      <circle cx="50" cy="44" r="17" fill="#F1EFEA"/>
+      <path d="M24,66 q6.5,-6 13,0 t13,0 t13,0 t13,0" fill="none" stroke="#15171C" stroke-width="5" stroke-linecap="round"/>
+      <path d="M30,76 q5,-5 10,0 t10,0 t10,0 t10,0" fill="none" stroke="#15171C" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="b-mono" viewBox="0 0 100 100">
+      <circle cx="50" cy="44" r="17" fill="#fff"/>
+      <path d="M24,66 q6.5,-6 13,0 t13,0 t13,0 t13,0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+      <path d="M30,76 q5,-5 10,0 t10,0 t10,0 t10,0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+    <!-- C: Monogram V with a sun dot -->
+    <symbol id="c-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#F1EFEA"/>
+      <path d="M24,30 h14 l12,30 l12,-30 h14 l-20,44 h-12 z" fill="#15171C"/>
+      <circle cx="74" cy="27" r="8" fill="#DE8730"/>
+    </symbol>
+    <symbol id="c-mono" viewBox="0 0 100 100">
+      <path d="M24,30 h14 l12,30 l12,-30 h14 l-20,44 h-12 z" fill="#fff"/>
+      <circle cx="74" cy="27" r="8" fill="#fff"/>
+    </symbol>
+  </defs>
+</svg>
+
+<style>
+  .row { display:flex; align-items:center; gap:14px; margin:10px 0; flex-wrap:wrap; }
+  .ic-round { border-radius:50%; overflow:hidden; display:block; }
+  .ic-squircle { border-radius:22%; overflow:hidden; display:block; }
+  .tray { background:#2b2f36; border-radius:8px; padding:8px 10px; display:flex; gap:10px; align-items:center; color:#ddd; font-size:12px; }
+  .phone { width:90px; height:160px; border-radius:14px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(0,0,0,.15); }
+  .cap { font-size:11px; opacity:.7; }
+</style>
+
+<h2>Which VibeWeather mark feels right?</h2>
+<p class="subtitle">All three use your existing palette — amber #DE8730, paper #F1EFEA, ink #15171C. Each card shows the launcher icon (round + squircle), small size, the white silhouette used for the status bar / themed icons, and the Android 12+ splash.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#a-full"/></svg>
+        <svg class="ic-squircle" width="64" height="64"><use href="#a-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#a-full"/></svg>
+      </div>
+      <div class="row">
+        <div class="tray"><svg width="20" height="20"><use href="#a-mono"/></svg>12:45 · status bar</div>
+        <div class="phone" style="background:#15171C"><svg class="ic-round" width="56" height="56"><use href="#a-full"/></svg></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Sunrise V</h3>
+      <p>The "V" is a valley with the sun setting into it. Dark ink tile, calm and premium; reads as both letter and landscape.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#b-full"/></svg>
+        <svg class="ic-squircle" width="64" height="64"><use href="#b-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#b-full"/></svg>
+      </div>
+      <div class="row">
+        <div class="tray"><svg width="20" height="20"><use href="#b-mono"/></svg>12:45 · status bar</div>
+        <div class="phone" style="background:#DE8730"><svg class="ic-round" width="56" height="56"><use href="#b-full"/></svg></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Vibe sun</h3>
+      <p>A sun over shimmering waves: the "vibe". Bright amber tile, warm and playful; most weather-like, least letter-like.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#c-full"/></svg>
+        <svg class="ic-squircle" width="64" height="64"><use href="#c-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#c-full"/></svg>
+      </div>
+      <div class="row">
+        <div class="tray"><svg width="20" height="20"><use href="#c-mono"/></svg>12:45 · status bar</div>
+        <div class="phone" style="background:#F1EFEA"><svg class="ic-round" width="56" height="56"><use href="#c-full"/></svg></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Monogram V</h3>
+      <p>A bold geometric "V" with an amber sun dot. Paper tile, matches the app's light theme; most brand-like, least weather-like.</p>
+    </div>
+  </div>
+</div>
+
+<p class="cap">Concepts only — final artwork gets tuned for the Android adaptive-icon safe zone.</p>

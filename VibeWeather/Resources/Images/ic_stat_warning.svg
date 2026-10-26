@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
+    <!-- Status-bar icon, severe warning: a rounded triangle with the "!" cut out, white on transparent. -->
+    <defs>
+        <mask id="bang" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+            <rect width="100" height="100" fill="#fff" />
+            <path d="M50 40v17M50 68v.5" fill="none" stroke="#000" stroke-width="9" stroke-linecap="round" />
+        </mask>
+    </defs>
+    <path d="M50 18L84 78H16Z" fill="#fff" stroke="#fff" stroke-width="10" stroke-linejoin="round" mask="url(#bang)" />
+</svg>

@@ -1,0 +1,238 @@
+.chart-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 16px 14px;
+}
+
+.reading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.reading-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.reading-value {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+/* Colour is set inline from the precipitation type and intensity. */
+.reading-category {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Touch target for the bar details: vertical swipes still scroll the page, horizontal drags pick bars. */
+.chart {
+    position: relative;
+    height: 124px;
+    touch-action: pan-y;
+    user-select: none;
+}
+
+    /* Only the chart itself takes the pointer, so touch positions are always relative to it. */
+    .chart > * {
+        pointer-events: none;
+    }
+
+.gridline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed var(--line);
+}
+
+    .gridline.moderate {
+        bottom: 52px;
+    }
+
+    .gridline.heavy {
+        bottom: 98px;
+    }
+
+.grid-label {
+    position: absolute;
+    right: 0;
+    font: 500 10.5px var(--font-mono);
+    color: var(--mut);
+}
+
+    .grid-label.moderate {
+        bottom: 54px;
+    }
+
+    .grid-label.heavy {
+        bottom: 100px;
+    }
+
+.bars {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.bar {
+    flex: 1;
+    border-radius: 1.5px;
+    transition: opacity .12s;
+}
+
+    /* The others fade while one is picked. */
+    .bar.dim {
+        opacity: .35;
+    }
+
+.cursor {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--ink);
+    opacity: .3;
+}
+
+/* Details of the picked bar, at the top of the chart above it. */
+.tip {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surf);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
+    white-space: nowrap;
+}
+
+.tip-time,
+.tip-dbz {
+    font: 500 10.5px var(--font-mono);
+    color: var(--mut);
+}
+
+.tip-rate {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tip-snow,
+.tip-kind {
+    font-size: 12.5px;
+}
+
+.tip-kind {
+    font-weight: 500;
+}
+
+.chart-hint {
+    font-size: 12px;
+    color: var(--mut);
+    text-align: center;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 12.5px;
+    color: var(--mut);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+/* Ticks sit at their minute: centred on it, except the first and last, which align with the chart's edges. */
+.axis {
+    position: relative;
+    height: 30px;
+    font: 500 11px var(--font-mono);
+    color: var(--mut);
+}
+
+.tick {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+    .tick:first-child {
+        align-items: flex-start;
+        transform: none;
+    }
+
+    .tick:last-child {
+        align-items: flex-end;
+        transform: translateX(-100%);
+    }
+
+.tick-clock {
+    font-size: 10px;
+    opacity: .75;
+}
+
+.events {
+    padding: 0 16px;
+}
+
+.event {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 50px;
+    font-size: 15px;
+}
+
+    .event + .event {
+        border-top: 1px solid var(--line);
+    }
+
+.event-key {
+    color: var(--mut);
+}
+
+.event-value {
+    font-weight: 500;
+}
+
+.alert-btn {
+    min-height: 52px;
+    border-radius: 26px;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all .2s;
+}
+
+    .alert-btn.on {
+        border-color: transparent;
+        background: var(--acc-soft);
+    }

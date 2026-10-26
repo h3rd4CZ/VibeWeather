@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MAUI's splash theme with the brand start screen. The background follows the system's night mode, and only the
+         sun shows, so the in-app splash (wwwroot/index.html) continues from it with the cloud sliding in. MAUI still
+         switches to its main theme once the activity starts (maui_splash is inherited). -->
+    <style name="VibeWeather.SplashTheme" parent="Maui.SplashTheme">
+        <item name="android:windowBackground">@drawable/vw_splash</item>
+        <item name="android:windowSplashScreenBackground">@color/vw_splash_bg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/vw_splash_sun</item>
+    </style>
+</resources>

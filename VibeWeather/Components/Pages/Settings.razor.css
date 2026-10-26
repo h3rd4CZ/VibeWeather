@@ -1,0 +1,286 @@
+.loc-row {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto 28px;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+}
+
+.loc-check {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--acc);
+    opacity: 0;
+}
+
+    .loc-check.on {
+        opacity: 1;
+    }
+
+.link-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 0;
+}
+
+.link-arrow {
+    font: 500 11px var(--font-mono);
+    color: var(--mut);
+}
+
+.debug-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 0;
+}
+
+.debug-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.loc-name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.loc-name {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.loc-temp {
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.manage-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+}
+
+    .manage-row ::deep .manage-icon {
+        stroke: var(--acc);
+    }
+
+.manage-label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.manage-count {
+    font: 500 11px var(--font-mono);
+    letter-spacing: .08em;
+    color: var(--mut);
+    text-transform: uppercase;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    font-size: 16px;
+}
+
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 0;
+}
+
+.toggle-btn {
+    width: 100%;
+    border: 0;
+    background: none;
+    text-align: left;
+}
+
+.switch,
+.switch-knob {
+    transition: background .2s, transform .22s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* A button: no padding of its own, so it lines up with the other rows. */
+/* A label above a full-width segmented control, for more options than fit beside it. */
+.stack-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 0;
+    font-size: 16px;
+}
+
+    .stack-row ::deep .seg-option {
+        flex: 1;
+        min-width: 0;
+        padding: 0 4px;
+    }
+
+.time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0;
+    font-size: 16px;
+}
+
+    .time-row .row-sub {
+        margin-left: 6px;
+    }
+
+.plan-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 0;
+}
+
+.plan-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.plan-time {
+    font: 500 15px var(--font-mono);
+}
+
+.plan-last {
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.late-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 0;
+}
+
+/* Alert hours: two pills (from – to), each opening the time picker. */
+.hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 0;
+}
+
+.hours-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+}
+
+    .hours-range .time-pill {
+        min-width: 0;
+        padding: 8px 12px;
+        border: 0;
+    }
+
+/* Styled like the segmented controls; tapping the row opens the system time picker. */
+.time-pill {
+    min-width: 96px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--seg-bg);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.toggle-label {
+    font-size: 16px;
+}
+
+.switch {
+    flex: none;
+    width: 51px;
+    height: 31px;
+    padding: 2px;
+    border-radius: 16px;
+    background: var(--seg-bg);
+}
+
+    .switch.on {
+        background: var(--acc);
+    }
+
+.switch-knob {
+    width: 27px;
+    height: 27px;
+    border-radius: 14px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+}
+
+.switch.on .switch-knob {
+    transform: translateX(20px);
+}
+
+/* Azure Maps key entry: label, then the field and Save on one line, then help or the error. */
+.key-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 0;
+}
+
+.key-form {
+    display: flex;
+    gap: 8px;
+}
+
+.key-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--seg-bg);
+    color: var(--ink);
+    font: 500 14px var(--font-mono);
+}
+
+    .key-input:focus {
+        outline: 2px solid var(--acc);
+    }
+
+.key-form .pill:disabled {
+    opacity: .45;
+}
+
+.key-hint {
+    font-family: var(--font-mono);
+}
+
+.key-error {
+    color: oklch(0.6 0.19 25);
+}

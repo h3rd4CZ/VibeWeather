@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's amber accent (oklch(0.7 0.15 62) in app.css), for native parts such as the time picker dialog. -->
+    <color name="colorPrimary">#DE8730</color>
+    <color name="colorPrimaryDark">#B86A1E</color>
+    <color name="colorAccent">#DE8730</color>
+    <!-- Start screen background before the app draws (light; values-night has the dark one). -->
+    <color name="vw_splash_bg">#F1EFEA</color>
+    <!-- Notification accents per kind, from the brand's cold-to-hot scale (doc/brand). -->
+    <color name="vw_notif_summary">#CD9A50</color>
+    <color name="vw_notif_precip">#507CB5</color>
+    <color name="vw_notif_warning">#C16048</color>
+    <color name="vw_notif_arrival">#368985</color>
+</resources>

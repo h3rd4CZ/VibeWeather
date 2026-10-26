@@ -1,0 +1,194 @@
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <!-- Shared shapes -->
+    <path id="cloud" d="M30,72 H70 A12,12 0 0 0 70,48 A17,17 0 0 0 38,42 A15,15 0 0 0 30,72 Z"/>
+    <mask id="stripes" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <rect x="0" y="54" width="100" height="3" fill="#000"/>
+      <rect x="0" y="61" width="100" height="3.5" fill="#000"/>
+      <rect x="0" y="68" width="100" height="4" fill="#000"/>
+    </mask>
+    <path id="drop" d="M44,24 C44,24 26,46 26,59 A18,18 0 0 0 62,59 C62,46 44,24 44,24 Z"/>
+    <path id="arc" d="M22,68 A28,28 0 0 1 78,68"/>
+
+    <!-- A: Sun & cloud -->
+    <symbol id="a-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#15171C"/>
+      <circle cx="64" cy="37" r="17" fill="#DE8730"/>
+      <use href="#cloud" fill="#F1EFEA"/>
+    </symbol>
+    <symbol id="a-mono" viewBox="0 0 100 100">
+      <mask id="a-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#fff"/>
+        <use href="#cloud" fill="#000" stroke="#000" stroke-width="7"/>
+      </mask>
+      <circle cx="64" cy="37" r="17" fill="#fff" mask="url(#a-cut)"/>
+      <use href="#cloud" fill="#fff"/>
+    </symbol>
+
+    <!-- B: Striped sun -->
+    <symbol id="b-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#15171C"/>
+      <circle cx="50" cy="50" r="25" fill="#DE8730" mask="url(#stripes)"/>
+    </symbol>
+    <symbol id="b-mono" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="25" fill="#fff" mask="url(#stripes)"/>
+    </symbol>
+
+    <!-- C: Sun & drop -->
+    <symbol id="c-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#F1EFEA"/>
+      <use href="#drop" fill="#3A80D2"/>
+      <circle cx="65" cy="36" r="12" fill="#DE8730" stroke="#F1EFEA" stroke-width="5"/>
+    </symbol>
+    <symbol id="c-mono" viewBox="0 0 100 100">
+      <mask id="c-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#fff"/>
+        <circle cx="65" cy="36" r="17" fill="#000"/>
+      </mask>
+      <use href="#drop" fill="#fff" mask="url(#c-cut)"/>
+      <circle cx="65" cy="36" r="12" fill="#fff"/>
+    </symbol>
+
+    <!-- D: Sun path -->
+    <symbol id="d-full" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#15171C"/>
+      <use href="#arc" fill="none" stroke="#F1EFEA" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 8"/>
+      <path d="M18,72 H82" stroke="#F1EFEA" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="36" cy="44" r="11" fill="#DE8730"/>
+    </symbol>
+    <symbol id="d-mono" viewBox="0 0 100 100">
+      <use href="#arc" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 8"/>
+      <path d="M18,72 H82" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="36" cy="44" r="11" fill="#fff"/>
+    </symbol>
+  </defs>
+</svg>
+
+<style>
+  .row { display:flex; align-items:center; gap:12px; margin:10px 0; flex-wrap:wrap; }
+  .ic-round { border-radius:50%; overflow:hidden; display:block; }
+  .ic-squircle { border-radius:22%; overflow:hidden; display:block; }
+  .tray { background:#2b2f36; border-radius:8px; padding:8px 10px; display:flex; gap:8px; align-items:center; color:#ddd; font-size:12px; }
+  .phone { width:96px; height:170px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border:1px solid rgba(0,0,0,.15); font-size:11px; letter-spacing:.02em; }
+  .cards { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+</style>
+
+<h2>Pick a clean VibeWeather mark</h2>
+<p class="subtitle">No letters, no "vibe" waves: just simple weather symbols in your palette (amber #DE8730, paper #F1EFEA, ink #15171C, rain blue from the app). Each card shows the launcher icon, the white status-bar version, and a looping preview of the animated splash.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#a-full"/></svg>
+        <svg class="ic-squircle" width="56" height="56"><use href="#a-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#a-full"/></svg>
+        <div class="tray"><svg width="20" height="20"><use href="#a-mono"/></svg>12:45</div>
+      </div>
+      <div class="row">
+        <div class="phone" style="background:#15171C;color:#F1EFEA">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <circle cx="64" cy="37" r="17" fill="#DE8730">
+              <animate attributeName="cy" values="66;66;37;37" keyTimes="0;.15;.55;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1;0 0 1 1"/>
+            </circle>
+            <use href="#cloud" fill="#F1EFEA">
+              <animateTransform attributeName="transform" type="translate" values="-14 0;-14 0;0 0;0 0" keyTimes="0;.05;.4;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1;0 0 1 1"/>
+              <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;.05;.3;1" dur="3s" repeatCount="indefinite"/>
+            </use>
+          </svg>
+          animated splash
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Sun &amp; cloud</h3>
+      <p>The classic "partly cloudy" symbol, cleaned up. Instantly says weather. Splash: the cloud drifts in, then the sun rises behind it.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#b-full"/></svg>
+        <svg class="ic-squircle" width="56" height="56"><use href="#b-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#b-full"/></svg>
+        <div class="tray"><svg width="20" height="20"><use href="#b-mono"/></svg>12:45</div>
+      </div>
+      <div class="row">
+        <div class="phone" style="background:#15171C;color:#F1EFEA">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <clipPath id="b-horizon"><rect x="0" y="0" width="100" height="76"/></clipPath>
+            <g clip-path="url(#b-horizon)">
+              <g>
+                <animateTransform attributeName="transform" type="translate" values="0 52;0 52;0 0;0 0" keyTimes="0;.1;.55;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;.2 .8 .2 1;0 0 1 1"/>
+                <circle cx="50" cy="50" r="25" fill="#DE8730" mask="url(#stripes)"/>
+              </g>
+            </g>
+          </svg>
+          animated splash
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Striped sun</h3>
+      <p>A single sun disc with horizon stripes. The most graphic and minimal; very recognisable at tiny sizes. Splash: the sun rises above the horizon.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#c-full"/></svg>
+        <svg class="ic-squircle" width="56" height="56"><use href="#c-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#c-full"/></svg>
+        <div class="tray"><svg width="20" height="20"><use href="#c-mono"/></svg>12:45</div>
+      </div>
+      <div class="row">
+        <div class="phone" style="background:#F1EFEA;color:#15171C">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <use href="#drop" fill="#3A80D2">
+              <animateTransform attributeName="transform" type="translate" values="0 -40;0 -40;0 0;0 0" keyTimes="0;.05;.35;1" dur="3s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;.6 0 .9 .6;0 0 1 1"/>
+              <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;.05;.2;1" dur="3s" repeatCount="indefinite"/>
+            </use>
+            <circle cx="65" cy="36" r="12" fill="#DE8730" stroke="#F1EFEA" stroke-width="5">
+              <animate attributeName="r" values="0;0;14;12;12" keyTimes="0;.38;.5;.58;1" dur="3s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+          animated splash
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Sun &amp; drop</h3>
+      <p>A raindrop with the sun peeking out: rain and shine in one shape, matching the app's precipitation focus. Light paper tile. Splash: the drop falls in, then the sun pops.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="row">
+        <svg class="ic-round" width="96" height="96"><use href="#d-full"/></svg>
+        <svg class="ic-squircle" width="56" height="56"><use href="#d-full"/></svg>
+        <svg class="ic-round" width="32" height="32"><use href="#d-full"/></svg>
+        <div class="tray"><svg width="20" height="20"><use href="#d-mono"/></svg>12:45</div>
+      </div>
+      <div class="row">
+        <div class="phone" style="background:#15171C;color:#F1EFEA">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <use href="#arc" fill="none" stroke="#F1EFEA" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" stroke-dasharray="0.1 8"/>
+            <path d="M18,72 H82" stroke="#F1EFEA" stroke-width="5" stroke-linecap="round"/>
+            <circle r="11" fill="#DE8730">
+              <animateMotion dur="3s" repeatCount="indefinite" keyPoints="0;0;.3;.3" keyTimes="0;.1;.6;1" calcMode="spline" keySplines="0 0 1 1;.3 .7 .3 1;0 0 1 1" path="M22,68 A28,28 0 0 1 78,68"/>
+            </circle>
+          </svg>
+          animated splash
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>D · Sun path</h3>
+      <p>The sun on its daily arc above the horizon: a nod to the hourly and sunrise/sunset data. Splash: the sun climbs along the dotted arc.</p>
+    </div>
+  </div>
+</div>

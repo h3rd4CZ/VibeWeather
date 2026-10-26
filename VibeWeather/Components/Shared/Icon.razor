@@ -1,0 +1,12 @@
+@* 24×24 stroke icon. Stroke colour follows `color` unless a class such as icon-acc overrides it. *@
+<svg width="@Size" height="@Size" viewBox="0 0 24 24" fill="none" stroke-width="@StrokeWidth.ToString(CultureInfo.InvariantCulture)"
+     stroke-linecap="round" stroke-linejoin="round" class="icon @Class" aria-hidden="true">
+    <path d="@Path"></path>
+</svg>
+
+@code {
+    [Parameter, EditorRequired] public string Path { get; set; } = "";
+    [Parameter] public int Size { get; set; } = 24;
+    [Parameter] public double StrokeWidth { get; set; } = 1.6;
+    [Parameter] public string? Class { get; set; }
+}

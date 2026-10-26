@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 100 100">
+    <!-- MAUI's own splash image: the brand sun. Android actually shows VibeWeather.SplashTheme (Platforms/Android). -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F7BC95" />
+            <stop offset="1" stop-color="#EED49F" />
+        </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="29" fill="url(#sun)" />
+</svg>

@@ -1,0 +1,47 @@
+.radius-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 14px;
+}
+
+.radius-value {
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+}
+
+/* Track filled with the accent up to the thumb (--fill set inline), thumb styled like the app's switches. */
+.radius-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    margin: 10px 0;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--acc) var(--fill), var(--seg-bg) var(--fill));
+    outline: none;
+}
+
+    .radius-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 27px;
+        height: 27px;
+        border-radius: 14px;
+        background: #FFFFFF;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .04);
+    }
+
+.radius-scale {
+    display: flex;
+    justify-content: space-between;
+    font: 500 11px var(--font-mono);
+    color: var(--mut);
+}
+
+.error {
+    padding: 0 4px;
+    font-size: 14px;
+    color: oklch(0.55 0.18 25);
+    text-wrap: pretty;
+}

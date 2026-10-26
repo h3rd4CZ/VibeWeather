@@ -1,0 +1,23 @@
+@* The start screen in index.html hands over to the app here: after the first render it fades out, and the
+   appearance and the page's offset from the screen centre are remembered, so the next start's splash is drawn light
+   or dark to match and its Orb lands exactly on Android's splash sun. *@
+@implements IDisposable
+@inject ThemeService Theme
+@inject IJSRuntime JS
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        Theme.Changed += OnThemeChanged;
+        await SaveTheme();
+        await JS.InvokeVoidAsync("vibeWeather.saveSplashShift", SplashGeometry.ShiftDp);
+        await JS.InvokeVoidAsync("vibeWeather.splashDone");
+    }
+
+    void OnThemeChanged() => _ = InvokeAsync(SaveTheme);
+
+    Task SaveTheme() => JS.InvokeVoidAsync("vibeWeather.saveTheme", Theme.Mode.ToString().ToLowerInvariant()).AsTask();
+
+    public void Dispose() => Theme.Changed -= OnThemeChanged;
+}

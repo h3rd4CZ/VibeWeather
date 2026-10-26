@@ -1,0 +1,15 @@
+@* Segmented control. Shows Selected highlighted; without a SelectedChanged handler it's display-only. *@
+<div class="seg" role="radiogroup">
+    @foreach (var option in Options)
+    {
+        var on = option == Selected;
+        <button type="button" role="radio" aria-checked="@(on ? "true" : "false")" class="seg-option @(on ? "on" : "")"
+                @onclick="() => SelectedChanged.InvokeAsync(option)">@option</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Options { get; set; } = [];
+    [Parameter] public string? Selected { get; set; }
+    [Parameter] public EventCallback<string> SelectedChanged { get; set; }
+}

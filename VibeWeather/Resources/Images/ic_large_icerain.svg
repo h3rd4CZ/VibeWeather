@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, freezing rain: icy drops (the app's freezing-rain teal) freezing on a line of ice. -->
+    <g fill="#BBC5D1">
+        <rect x="19" y="36" width="62" height="24" rx="12" />
+        <circle cx="40" cy="33" r="17" />
+        <circle cx="63" cy="39" r="12" />
+    </g>
+    <path d="M36 68l-3 10M52 68l-3 10M68 68l-3 10" fill="none" stroke="#00A0A6" stroke-width="7" stroke-linecap="round" />
+    <path d="M24 90H76" fill="none" stroke="#00A0A6" stroke-width="6" stroke-linecap="round" />
+</svg>

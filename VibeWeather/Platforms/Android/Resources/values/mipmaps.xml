@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 7.x has no adaptive icons: there the themed launcher icon is MAUI's plain one. -->
+    <item name="appicon_themed" type="mipmap">@mipmap/appicon</item>
+    <item name="appicon_themed_round" type="mipmap">@mipmap/appicon_round</item>
+</resources>

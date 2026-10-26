@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
+    <!-- Status-bar icon, precipitation alert: the Orb's cloud with three drops, white on transparent. -->
+    <g fill="#fff">
+        <rect x="19" y="36" width="62" height="24" rx="12" />
+        <circle cx="40" cy="33" r="17" />
+        <circle cx="63" cy="39" r="12" />
+    </g>
+    <path d="M34 72l-4 12M52 72l-4 12M70 72l-4 12" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" />
+</svg>

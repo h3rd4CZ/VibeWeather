@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, morning summary: the Orb on transparency, the gap cut out, the cloud in soft grey-blue
+         so it shows on light and dark notification backgrounds. -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F7BC95" />
+            <stop offset="1" stop-color="#EED49F" />
+        </linearGradient>
+        <mask id="halo" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+            <rect width="100" height="100" fill="#fff" />
+            <g fill="#000">
+                <rect x="12" y="53" width="76" height="38" rx="19" />
+                <circle cx="40" cy="57" r="24" />
+                <circle cx="63" cy="63" r="19" />
+            </g>
+        </mask>
+    </defs>
+    <circle cx="60" cy="40" r="29" fill="url(#sun)" mask="url(#halo)" />
+    <g fill="#BBC5D1">
+        <rect x="19" y="60" width="62" height="24" rx="12" />
+        <circle cx="40" cy="57" r="17" />
+        <circle cx="63" cy="63" r="12" />
+    </g>
+</svg>

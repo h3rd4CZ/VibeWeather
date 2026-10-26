@@ -1,0 +1,97 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject WeatherState State
+@inject ThemeService Theme
+@inject NavigationManager Navigation
+
+<div class="app @Theme.CssClass acc-@(State.View?.AccentKey ?? "clear")">
+    <header class="app-header">
+        <a href="settings" class="location">
+            <span class="location-name">@(State.View?.LocationName ?? "Počasí")</span>
+            <span class="location-sub">@Subtitle</span>
+        </a>
+        <a href="settings" class="settings-btn" aria-label="Nastavení">
+            <Icon Path="@WeatherIcons.Settings" Size="20" StrokeWidth="1.8" />
+        </a>
+    </header>
+
+    <main class="app-content">
+        @if (State.View is { } view)
+        {
+            @if (State.Error is { } error)
+            {
+                <div class="banner">
+                    <span>Aktualizace se nezdařila. @error</span>
+                    <button type="button" class="banner-retry" @onclick="State.RefreshAsync">Zkusit znovu</button>
+                </div>
+            }
+            <CascadingValue Value="view">
+                <AppErrorBoundary @ref="boundary">
+                    <ChildContent>@Body</ChildContent>
+                    <ErrorContent>
+                        <div class="status">
+                            <span class="status-title">Na této obrazovce došlo k chybě</span>
+                            <span class="status-text">Chyba byla zapsána do protokolu chyb. Ostatní karty fungují dál.</span>
+                            <button type="button" class="status-retry" @onclick="() => boundary?.Recover()">Načíst obrazovku znovu</button>
+                        </div>
+                    </ErrorContent>
+                </AppErrorBoundary>
+            </CascadingValue>
+        }
+        else if (State.Error is { } error)
+        {
+            <div class="status">
+                <span class="status-title">Předpověď není k dispozici</span>
+                <span class="status-text">@error</span>
+                <button type="button" class="status-retry" @onclick="State.RefreshAsync">Zkusit znovu</button>
+            </div>
+        }
+        else
+        {
+            <div class="status">
+                <span class="status-text">Načítám předpověď…</span>
+            </div>
+        }
+    </main>
+
+    <TabBar />
+    <ErrorDialog />
+</div>
+
+@code {
+    AppErrorBoundary? boundary;
+
+    string Subtitle => State.IsLoading ? "Aktualizuji…" : State.Notice ?? State.View?.HeaderSubtitle ?? "";
+
+    // A new page gets a fresh start; an error on one tab shouldn't keep the next one hidden.
+    protected override void OnParametersSet()
+    {
+        boundary?.Recover();
+        State.CurrentRoute = Navigation.ToBaseRelativePath(Navigation.Uri);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        State.ShowForecastRequested += OnShowForecast;
+        Theme.Changed += OnStateChanged;
+        await State.EnsureStartedAsync();
+    }
+
+    // Opened from a notification while the app wasn't running: go to its page once Teď has rendered, so Back returns there.
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && State.TakePendingRoute() is { Length: > 0 } route) Navigation.NavigateTo(route);
+    }
+
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    void OnShowForecast(string route) => InvokeAsync(() => Navigation.NavigateTo(route));
+
+    public void Dispose()
+    {
+        State.Changed -= OnStateChanged;
+        State.ShowForecastRequested -= OnShowForecast;
+        Theme.Changed -= OnStateChanged;
+    }
+}

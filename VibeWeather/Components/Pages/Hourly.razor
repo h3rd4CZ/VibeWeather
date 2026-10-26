@@ -1,0 +1,84 @@
+@page "/hourly"
+
+<div class="stack">
+    <div class="page-intro">
+        <span class="mono-label">PŘÍŠTÍ 3 DNY</span>
+        <h1 class="page-title">@Weather.HourHeadline</h1>
+    </div>
+
+    <section class="card hours-scroll">
+        <div class="hours-track" style="width:@(Weather.HourTrackWidth)px">
+            <div class="hours-columns">
+                @foreach (var col in Weather.HourColumns)
+                {
+                    <div class="hour-col @(col.Selected ? "selected" : "") @(col.Day is null ? "" : "day-start")">
+                        @if (col.Day is not null)
+                        {
+                            <span class="hour-day">@col.Day</span>
+                        }
+                        <span class="hour-label">@col.Label</span>
+                        <WeatherIcon Condition="col.Condition" Class="hour-icon" />
+                        <span class="hour-temp" style="top:@(col.TempTop)px">@col.Temp</span>
+                        @if (col.Precip is { } bar)
+                        {
+                            <span class="hour-amount">@col.Amount</span>
+                            <span class="hour-bar" style="height:@(bar.Height)px;background:@bar.Color"></span>
+                        }
+                        <span class="hour-pop @(col.PopHigh ? "high" : "")">@col.Pop</span>
+                        <span class="hour-wind">
+                            <span class="wind-arrow" style="transform:rotate(@(col.WindTo)deg)">
+                                <Icon Path="@WeatherIcons.WindArrow" Size="13" StrokeWidth="2.2" />
+                            </span>
+                            @col.Wind
+                        </span>
+                    </div>
+                }
+            </div>
+            <svg class="hours-chart" width="@Weather.HourTrackWidth" height="280" aria-hidden="true">
+                @* The curve and its area take each hour's temperature colour. *@
+                <defs>
+                    <linearGradient id="hour-temp" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="@Weather.HourTrackWidth" y2="0">
+                        @foreach (var stop in Weather.HourLineStops)
+                        {
+                            <stop offset="@(stop.Offset)%" style="stop-color:@stop.Color"></stop>
+                        }
+                    </linearGradient>
+                </defs>
+                <path class="area" d="@Weather.HourArea"></path>
+                <path class="line" d="@Weather.HourLine"></path>
+                <circle class="dot" cx="@Weather.SelectedX" cy="@Weather.SelectedY" r="5.5" style="stroke:@Weather.TempColor"></circle>
+            </svg>
+        </div>
+        @* Bar colours: one hue per kind of precipitation, deeper as it gets heavier; then the wind's unit. *@
+        <div class="legend">
+            @foreach (var item in Weather.HourLegend)
+            {
+                <span class="legend-item"><span class="legend-swatch" style="background:@item.Color"></span>@item.Name</span>
+            }
+            <span class="legend-item"><Icon Path="@WeatherIcons.WindArrow" Size="12" StrokeWidth="2.2" />Vítr, @Weather.WindUnit</span>
+        </div>
+    </section>
+
+    <section class="card hour-detail">
+        <div class="hour-detail-head">
+            <div class="hour-detail-text">
+                <span class="mono-label tight">@Weather.HourDetailWhen</span>
+                <span class="hour-detail-cond">@Weather.HourDetailDescription</span>
+            </div>
+            <span class="hour-detail-temp">@Weather.HourDetailTemp</span>
+        </div>
+        <div class="stat-grid">
+            @foreach (var stat in Weather.HourDetailStats)
+            {
+                <div class="stat">
+                    <span class="stat-key">@stat.Key</span>
+                    <span class="stat-value">@stat.Value</span>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+}

@@ -1,0 +1,59 @@
+@* Full-screen layout without header or tab bar, used by Settings and its sub-screens. *@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject WeatherState State
+@inject ThemeService Theme
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="app @Theme.CssClass acc-@(State.View?.AccentKey ?? "clear")">
+    <AppErrorBoundary @ref="boundary">
+        <ChildContent>@Body</ChildContent>
+        <ErrorContent>
+            <div class="sheet">
+                <header class="sheet-head">
+                    <h1 class="sheet-title">Chyba</h1>
+                    <button type="button" class="done-btn" @onclick="Back">Zpět</button>
+                </header>
+                <div class="sheet-body">
+                    <span class="group-note">Na této obrazovce došlo k chybě. Byla zapsána do Nastavení → Protokol chyb.</span>
+                    <button type="button" class="primary-btn" @onclick="() => boundary?.Recover()">Načíst obrazovku znovu</button>
+                </div>
+            </div>
+        </ErrorContent>
+    </AppErrorBoundary>
+    <ErrorDialog />
+</div>
+
+@code {
+    AppErrorBoundary? boundary;
+
+    protected override void OnParametersSet()
+    {
+        boundary?.Recover();
+        State.CurrentRoute = Navigation.ToBaseRelativePath(Navigation.Uri);
+    }
+
+    // Opened from an arrival notification while Settings was showing: go to the forecast.
+    protected override void OnInitialized()
+    {
+        State.ShowForecastRequested += OnShowForecast;
+        Theme.Changed += OnThemeChanged;
+    }
+
+    void OnShowForecast(string route) => InvokeAsync(() => Navigation.NavigateTo(route));
+
+    void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        State.ShowForecastRequested -= OnShowForecast;
+        Theme.Changed -= OnThemeChanged;
+    }
+
+    async Task Back()
+    {
+        boundary?.Recover();
+        await JS.InvokeVoidAsync("history.back");
+    }
+}

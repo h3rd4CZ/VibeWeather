@@ -1,0 +1,36 @@
+.permission {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+}
+
+.permission-title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.permission-text {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--mut);
+    text-wrap: pretty;
+}
+
+    /* ::deep: the explanation comes from the parent, so its <strong> carries the parent's scope. */
+    .permission-text ::deep strong,
+    .permission-text strong {
+        color: var(--ink);
+        font-weight: 600;
+    }
+
+.permission .primary-btn {
+    margin-top: 6px;
+}
+
+.primary-btn.secondary {
+    border: 1.5px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+}

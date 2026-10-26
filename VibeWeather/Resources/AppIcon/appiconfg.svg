@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="456" height="456" viewBox="0 0 456 456">
+    <!-- Design 1b "Orb" (doc/brand/Vibe Weather Brand.dc.html) on the dusk-blue tile of appicon.svg, in its 100-unit
+         box, scaled ×2.2 and centred: about the share of the tile it has in the design, well inside the adaptive-icon
+         safe circle. -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F7BC95" />
+            <stop offset="1" stop-color="#EED49F" />
+        </linearGradient>
+        <!-- The tile's gradient in this group's coordinates (canvas y 0..456 is -51.6..155.6 here), so the halo matches it. -->
+        <linearGradient id="sky" x1="0" y1="-51.6" x2="0" y2="155.6" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#3A4E6B" />
+            <stop offset="1" stop-color="#243047" />
+        </linearGradient>
+    </defs>
+    <g transform="translate(118 113.6) scale(2.2)">
+        <circle cx="60" cy="40" r="29" fill="url(#sun)" />
+        <!-- Halo in the tile colour: separates the cloud from the sun. -->
+        <g fill="url(#sky)">
+            <rect x="15" y="56" width="70" height="32" rx="16" />
+            <circle cx="40" cy="57" r="21" />
+            <circle cx="63" cy="63" r="16" />
+        </g>
+        <g fill="#F4F5F7">
+            <rect x="19" y="60" width="62" height="24" rx="12" />
+            <circle cx="40" cy="57" r="17" />
+            <circle cx="63" cy="63" r="12" />
+        </g>
+    </g>
+</svg>

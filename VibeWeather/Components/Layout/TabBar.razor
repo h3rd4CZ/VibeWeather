@@ -1,0 +1,27 @@
+<nav class="tab-bar">
+    @foreach (var tab in Tabs)
+    {
+        <NavLink href="@tab.Href" Match="NavLinkMatch.All" class="tab" ActiveClass="active">
+            <span class="tab-indicator"></span>
+            <Icon Path="@tab.Icon" StrokeWidth="1.7" />
+            <span class="tab-label">@tab.Label</span>
+        </NavLink>
+    }
+    @* Ends the app straight away (see AppExit). *@
+    <button type="button" class="tab tab-close" @onclick="AppExit.Now" aria-label="Zavřít aplikaci">
+        <Icon Path="@WeatherIcons.TabClose" Size="20" StrokeWidth="2" />
+        <span class="tab-label">Zavřít</span>
+    </button>
+</nav>
+
+@code {
+    record Tab(string Href, string Label, string Icon);
+
+    static readonly Tab[] Tabs =
+    [
+        new("", "Teď", WeatherIcons.TabNow),
+        new("next-hour", "Příští hodina", WeatherIcons.TabNextHour),
+        new("hourly", "Po hodinách", WeatherIcons.TabHourly),
+        new("daily", "16 dní", WeatherIcons.TabDaily),
+    ];
+}

@@ -1,0 +1,158 @@
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="orb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="oklch(0.84 0.085 55)"/>
+      <stop offset="1" stop-color="oklch(0.88 0.075 85)"/>
+    </linearGradient>
+    <symbol id="small" viewBox="0 0 100 100">
+      <mask id="small-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#fff"/>
+        <g fill="#000"><rect x="12" y="53" width="76" height="38" rx="19"/><circle cx="40" cy="57" r="24"/><circle cx="63" cy="63" r="19"/></g>
+      </mask>
+      <circle cx="60" cy="40" r="29" fill="#fff" mask="url(#small-cut)"/>
+      <g fill="#fff"><rect x="19" y="60" width="62" height="24" rx="12"/><circle cx="40" cy="57" r="17"/><circle cx="63" cy="63" r="12"/></g>
+    </symbol>
+    <symbol id="small-ink" viewBox="0 0 100 100">
+      <mask id="small-cut2" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+        <rect width="100" height="100" fill="#fff"/>
+        <g fill="#000"><rect x="12" y="53" width="76" height="38" rx="19"/><circle cx="40" cy="57" r="24"/><circle cx="63" cy="63" r="19"/></g>
+      </mask>
+      <circle cx="60" cy="40" r="29" fill="#15171C" mask="url(#small-cut2)"/>
+      <g fill="#15171C"><rect x="19" y="60" width="62" height="24" rx="12"/><circle cx="40" cy="57" r="17"/><circle cx="63" cy="63" r="12"/></g>
+    </symbol>
+    <symbol id="lg-sun" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="#F1EFEA"/>
+      <circle cx="50" cy="50" r="27" fill="url(#orb)"/>
+    </symbol>
+    <symbol id="lg-rain" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="#F1EFEA"/>
+      <g stroke="oklch(0.6 0.15 250)" stroke-width="6" stroke-linecap="round"><path d="M36 70l-4 12M52 70l-4 12M68 70l-4 12"/></g>
+      <g fill="#F1EFEA"><rect x="15" y="38" width="70" height="32" rx="16"/><circle cx="40" cy="39" r="21"/><circle cx="63" cy="45" r="16"/></g>
+      <g fill="#FFFFFF"><rect x="19" y="42" width="62" height="24" rx="12"/><circle cx="40" cy="39" r="17"/><circle cx="63" cy="45" r="12"/></g>
+      <g fill="none" stroke="#D9D5CC" stroke-width="1.5"><rect x="19" y="42" width="62" height="24" rx="12"/></g>
+    </symbol>
+    <symbol id="lg-warn" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="#F1EFEA"/>
+      <path d="M50 20 L83 77 H17 Z" fill="url(#orb)" stroke="url(#orb)" stroke-width="9" stroke-linejoin="round"/>
+      <path d="M50 42v15M50 67v.5" stroke="#15171C" stroke-width="7" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lg-pin" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="22" fill="#F1EFEA"/>
+      <path d="M50 14c-15 0-26 11-26 26 0 19 26 46 26 46s26-27 26-46c0-15-11-26-26-26z" fill="#15171C"/>
+      <circle cx="50" cy="40" r="12" fill="url(#orb)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<style>
+  .shade { border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .shade.light { background:#E9E7E2; }
+  .shade.dark { background:#101215; }
+  .note { border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:flex-start; font-family:system-ui,sans-serif; }
+  .light .note { background:#FFFFFF; color:#15171C; }
+  .dark .note { background:#22252B; color:#ECEDEF; }
+  .note .body { flex:1; min-width:0; }
+  .note .head { display:flex; align-items:center; gap:6px; font-size:12px; }
+  .note .t { opacity:.6; }
+  .note .ttl { font-size:13px; font-weight:600; margin-top:3px; }
+  .note .txt { font-size:12px; opacity:.75; margin-top:2px; }
+  .bar { display:flex; gap:8px; align-items:center; padding:2px 6px; font:12px system-ui; }
+  .light .bar { color:#15171C; } .dark .bar { color:#ECEDEF; }
+  .badge { width:20px; height:20px; border-radius:50%; padding:3px; flex:none; display:block; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row4 { display:flex; gap:14px; align-items:center; margin:8px 0 18px; }
+  .row4 span { font-size:12px; opacity:.7; }
+</style>
+
+<h2>Notifications v2: the 1b palette instead of orange</h2>
+<p class="subtitle">The warning triangle now uses the Orb gradient (peach to gold) with an ink "!". All four large icons:</p>
+<div class="row4">
+  <svg width="56" height="56"><use href="#lg-sun"/></svg>
+  <svg width="56" height="56"><use href="#lg-rain"/></svg>
+  <svg width="56" height="56"><use href="#lg-warn"/></svg>
+  <svg width="56" height="56"><use href="#lg-pin"/></svg>
+  <span>summary · rain · warning · zone</span>
+</div>
+
+<h3>Which accent for the small icon and the app name?</h3>
+<p class="subtitle">Android fills the small-icon circle and colors "Vibe Weather" with this one accent. It also darkens the text automatically if contrast is too low.</p>
+
+<div class="cards">
+  <div class="card" data-choice="peach" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="pair">
+        <div class="shade light">
+          <div class="bar">12:45 <svg width="14" height="14" style="filter:brightness(0)"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:oklch(0.84 0.085 55)"><use href="#small"/></svg>
+            <div class="body"><div class="head" style="color:oklch(0.6 0.09 55)">Vibe Weather <span class="t" style="color:#15171C">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+        <div class="shade dark">
+          <div class="bar">12:45 <svg width="14" height="14"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:oklch(0.84 0.085 55)"><use href="#small"/></svg>
+            <div class="body"><div class="head" style="color:oklch(0.84 0.085 55)">Vibe Weather <span class="t" style="color:#ECEDEF">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A · Orb peach</h3><p>The sun's top color, oklch(0.84 0.085 55). Soft and exactly on-brand; on light backgrounds Android darkens the app name for contrast.</p></div>
+  </div>
+
+  <div class="card" data-choice="deep" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="pair">
+        <div class="shade light">
+          <div class="bar">12:45 <svg width="14" height="14" style="filter:brightness(0)"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:oklch(0.7 0.09 50)"><use href="#small"/></svg>
+            <div class="body"><div class="head" style="color:oklch(0.6 0.09 50)">Vibe Weather <span class="t" style="color:#15171C">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+        <div class="shade dark">
+          <div class="bar">12:45 <svg width="14" height="14"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:oklch(0.7 0.09 50)"><use href="#small"/></svg>
+            <div class="body"><div class="head" style="color:oklch(0.78 0.09 52)">Vibe Weather <span class="t" style="color:#ECEDEF">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B · Muted terracotta</h3><p>The same hue as the Orb, a little deeper and less saturated: oklch(0.7 0.09 50). Reads well on both light and dark, still clearly the Orb's color.</p></div>
+  </div>
+
+  <div class="card" data-choice="ink" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="pair">
+        <div class="shade light">
+          <div class="bar">12:45 <svg width="14" height="14" style="filter:brightness(0)"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:#15171C"><use href="#small"/></svg>
+            <div class="body"><div class="head" style="color:#15171C">Vibe Weather <span class="t">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+        <div class="shade dark">
+          <div class="bar">12:45 <svg width="14" height="14"><use href="#small"/></svg></div>
+          <div class="note">
+            <svg class="badge" style="background:#ECEDEF"><use href="#small-ink"/></svg>
+            <div class="body"><div class="head" style="color:#ECEDEF">Vibe Weather <span class="t">· 14:20</span></div>
+              <div class="ttl">Silné bouřky · Praha</div><div class="txt">do 21:00 · Středočeský kraj</div></div>
+            <svg width="40" height="40" style="flex:none"><use href="#lg-warn"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C · Ink (neutral)</h3><p>No color: ink #15171C, which Android inverts in the dark shade. Quietest and cleanest; the color comes only from the large picture.</p></div>
+  </div>
+</div>

@@ -1,0 +1,493 @@
+/* Design tokens from doc/ui_design. Light theme on :root; .theme-dark on .app overrides them. */
+:root {
+    --bg: #F1EFEA;
+    --surf: #FFFFFF;
+    --ink: #15171C;
+    --mut: #686B73;
+    --line: rgba(21, 23, 28, .09);
+    --seg-bg: #E8E5DE;
+    --seg-on: #FFFFFF;
+    --dry: #D9D5CC;
+    /* Inputs to colours computed per value: temperature lightness, the hero tint strength, and
+       precipitation lightness as l0 + l1 × intensity (darker with intensity on light paper). */
+    --temp-l: 0.62;
+    --hero-mix: 16%;
+    --precip-l0: 0.84;
+    --precip-l1: -0.42;
+    /* Weather icon colours: sun (and lightning), moon, rain, snow. */
+    --wi-sun: oklch(0.76 0.16 66);
+    --wi-moon: oklch(0.6 0.07 270);
+    --wi-rain: oklch(0.6 0.15 250);
+    --wi-snow: oklch(0.66 0.09 225);
+    --font-sans: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.app.theme-dark {
+    --bg: #0E1013;
+    --surf: #181B20;
+    --ink: #ECEDEF;
+    --mut: #959AA3;
+    --line: rgba(255, 255, 255, .09);
+    --seg-bg: #24282F;
+    --seg-on: #3A3F48;
+    --dry: #2E333B;
+    --temp-l: 0.74;
+    --hero-mix: 22%;
+    --precip-l0: 0.5;
+    --precip-l1: 0.35;
+    --wi-sun: oklch(0.82 0.15 74);
+    --wi-moon: oklch(0.86 0.06 95);
+    --wi-rain: oklch(0.72 0.12 245);
+    --wi-snow: oklch(0.84 0.06 225);
+    /* Native form controls (e.g. the time picker field) follow the theme too. */
+    color-scheme: dark;
+}
+
+/* The accent follows the current condition. Set on .app together with the derived
+   colours, so they are recomputed from the overridden --acc. */
+.acc-clear { --acc: oklch(0.7 0.15 62); }
+.acc-rain { --acc: oklch(0.56 0.14 250); }
+.acc-storm { --acc: oklch(0.52 0.16 292); }
+.theme-dark.acc-clear { --acc: oklch(0.78 0.14 68); }
+.theme-dark.acc-rain { --acc: oklch(0.7 0.12 245); }
+.theme-dark.acc-storm { --acc: oklch(0.7 0.14 292); }
+
+.app {
+    --acc-soft: color-mix(in oklch, var(--acc) 15%, transparent);
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    transition: background .3s, color .3s;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+h1:focus {
+    outline: none;
+}
+
+/* Shared building blocks */
+.icon {
+    flex: none;
+    stroke: currentColor;
+}
+
+/* Weather icons (WeatherIcon component): clouds take the icon's stroke colour with a faint body of it; the sun,
+   moon and precipitation keep their own colours everywhere. */
+.wicon .t-cloud,
+.wicon .t-cloud-back {
+    fill: color-mix(in oklch, currentColor 7%, transparent);
+}
+
+.wicon .t-cloud-back {
+    stroke-opacity: .5;
+}
+
+.wicon .t-sun,
+.wicon .t-bolt {
+    stroke: var(--wi-sun);
+}
+
+.wicon .t-sun-disc {
+    stroke: var(--wi-sun);
+    fill: color-mix(in oklch, var(--wi-sun) 24%, transparent);
+}
+
+.wicon .t-moon {
+    stroke: var(--wi-moon);
+    fill: color-mix(in oklch, var(--wi-moon) 20%, transparent);
+}
+
+.wicon .t-star {
+    stroke: var(--wi-moon);
+}
+
+.wicon .t-rain {
+    stroke: var(--wi-rain);
+}
+
+.wicon .t-snow {
+    stroke: var(--wi-snow);
+}
+
+.wicon .t-fog {
+    stroke-opacity: .55;
+}
+
+.mono-label {
+    font: 500 11px var(--font-mono);
+    letter-spacing: .08em;
+    color: var(--mut);
+}
+
+    .mono-label.tight {
+        letter-spacing: .06em;
+    }
+
+.card {
+    border-radius: 22px;
+    background: var(--surf);
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 6px;
+}
+
+.page-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 2px 6px;
+}
+
+.page-title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    text-wrap: pretty;
+}
+
+.page-sub {
+    font-size: 15px;
+    color: var(--mut);
+    text-wrap: pretty;
+}
+
+/* Full-screen sheets (Settings, Locations): title bar with Done, then grouped cards of rows. */
+.sheet {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    animation: sheet-in .4s cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes sheet-in {
+    from {
+        transform: translateX(100%);
+    }
+}
+
+.sheet-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px 12px;
+}
+
+.sheet-title {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.done-btn {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 4px 20px 40px;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.group-label {
+    padding: 0 4px;
+}
+
+.group-card {
+    padding: 0 16px;
+    border-radius: 18px;
+    background: var(--surf);
+}
+
+/* Specific enough to beat button resets (border: 0) on rows that are buttons. */
+.group-card > .row + .row {
+    border-top: 1px solid var(--line);
+}
+
+.row-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.row-sub {
+    font-size: 13px;
+    color: var(--mut);
+}
+
+.group-note {
+    padding: 0 4px;
+    font-size: 13px;
+    color: var(--mut);
+    text-wrap: pretty;
+}
+
+/* A place with a trailing action (Add, Remove, Choose). */
+.place-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 62px;
+}
+
+.place-name {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Status text in place of rows: "Searching…", "No places found". */
+.hint {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    font-size: 15px;
+    color: var(--mut);
+}
+
+.pill {
+    flex: none;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 18px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+    .pill.outline {
+        border: 1.5px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+    }
+
+.added {
+    flex: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--acc);
+}
+
+/* Full-width main action at the end of a sheet. */
+.primary-btn {
+    min-height: 52px;
+    border: 0;
+    border-radius: 26px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+    .primary-btn:disabled {
+        opacity: .35;
+    }
+
+/* "You're here" marker for geofenced places the device is inside. */
+.chip-inside {
+    --online: oklch(0.6 0.15 150);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: color-mix(in oklch, var(--online) 14%, transparent);
+    color: var(--online);
+    font: 500 10.5px var(--font-mono);
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+
+    .chip-inside::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: currentColor;
+        box-shadow: 0 0 0 3px color-mix(in oklch, currentColor 25%, transparent);
+    }
+
+/* Blazor's error bar (index.html), shown when the app itself fails; screens have their own error states. */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 14px 48px 16px 20px;
+    background: var(--surf);
+    color: var(--ink);
+    border-top: 1px solid var(--line);
+    font: 400 15px var(--font-sans);
+}
+
+html[data-theme="dark"] #blazor-error-ui {
+    background: #181B20;
+    color: #ECEDEF;
+    border-top-color: rgba(255, 255, 255, .09);
+}
+
+    #blazor-error-ui .reload {
+        color: inherit;
+        font-weight: 600;
+        margin-left: 6px;
+    }
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 18px;
+        top: 14px;
+        opacity: .6;
+    }
+
+/* Start screen (index.html): design 1b "Orb". Android's splash shows the sun alone at the same place, so here the
+   sun is already there and the cloud, wordmark and bar follow. Colours follow data-theme on <html>. */
+#vw-splash {
+    --vw-bg: #F1EFEA;
+    --vw-ink: #15171C;
+    --vw-cloud: #FFFFFF;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: var(--vw-bg);
+}
+
+html[data-theme="dark"] #vw-splash {
+    --vw-bg: #0E1013;
+    --vw-ink: #ECEDEF;
+    --vw-cloud: #ECEDEF;
+}
+
+    #vw-splash .vw-orb {
+        position: absolute;
+        left: calc(50% - 60px);
+        top: calc(50% - 60px - var(--vw-splash-shift, 0px));
+        overflow: visible;
+    }
+
+    #vw-splash .vw-halo {
+        fill: var(--vw-bg);
+    }
+
+    #vw-splash .vw-cloud-body {
+        fill: var(--vw-cloud);
+    }
+
+html:not([data-theme="dark"]) #vw-splash .vw-cloud-body {
+    filter: drop-shadow(0 3px 6px rgba(40, 40, 60, .10));
+}
+
+    #vw-splash .vw-cloud {
+        animation: vw-slide-in .9s cubic-bezier(.2, .8, .2, 1) .1s both;
+    }
+
+    #vw-splash .vw-wordmark {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% + 74px - var(--vw-splash-shift, 0px));
+        text-align: center;
+        font: 300 24px var(--font-sans);
+        letter-spacing: -0.03em;
+        color: var(--vw-ink);
+        animation: vw-fade-in .7s ease .45s both;
+    }
+
+        #vw-splash .vw-wordmark b {
+            font-weight: 600;
+        }
+
+    #vw-splash .vw-bar {
+        position: absolute;
+        bottom: 56px;
+        left: calc(50% - 28px);
+        width: 56px;
+        height: 3px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, oklch(0.82 0.085 260), oklch(0.82 0.085 185), oklch(0.82 0.085 65), oklch(0.82 0.085 28));
+        transform-origin: left;
+        animation: vw-load .9s ease .5s both;
+    }
+
+#vw-splash.vw-splash-out {
+    animation: vw-splash-out .25s ease forwards;
+}
+
+@keyframes vw-slide-in {
+    from { transform: translateX(-22px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+@keyframes vw-fade-in {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+@keyframes vw-load {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+@keyframes vw-splash-out {
+    to { opacity: 0; }
+}

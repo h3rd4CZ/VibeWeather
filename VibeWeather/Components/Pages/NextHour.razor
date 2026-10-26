@@ -1,0 +1,155 @@
+@page "/next-hour"
+@implements IDisposable
+@inject PrecipAlertMonitor Alerts
+@inject IJSRuntime JS
+@inject IHaptics Haptics
+
+<div class="stack">
+    <div class="page-intro">
+        <span class="mono-label">@Weather.MinuteHeading</span>
+        <h1 class="page-title">@Weather.SummaryTitle</h1>
+        <span class="page-sub">@Weather.SummarySub</span>
+    </div>
+
+    <section class="card chart-card">
+        <div class="reading">
+            <div class="reading-main">
+                <span class="mono-label tight">@Weather.ReadingTop</span>
+                <span class="reading-value">@Weather.ReadingValue</span>
+            </div>
+            <span class="reading-category" style="color:@Weather.ReadingColor">@Weather.ReadingCategory</span>
+        </div>
+
+        @* Touch and drag along the chart: the bar under the finger shows its time, rate, kind and radar reflectivity. *@
+        <div class="chart" @ref="chart" @onpointerdown="TouchAsync" @onpointermove="Move"
+             @onpointerup="ReleaseAsync" @onpointercancel="ReleaseAsync">
+            <div class="gridline moderate"></div>
+            <div class="gridline heavy"></div>
+            <span class="grid-label moderate">MÍRNÝ</span>
+            <span class="grid-label heavy">SILNÝ</span>
+            <div class="bars">
+                @for (int i = 0; i < Weather.MinuteBars.Count; i++)
+                {
+                    var bar = Weather.MinuteBars[i];
+                    <div class="bar @(selected is { } s && s != i ? "dim" : "")" style="height:@(bar.Height)px;background:@bar.Color"></div>
+                }
+            </div>
+            @if (Selected is { } info)
+            {
+                <div class="cursor" style="left:@(info.Center)%"></div>
+                @* Kept inside the chart: at the left edge it hangs right of the bar, at the right edge left of it. *@
+                <div class="tip" style="left:@(info.Center)%;transform:translateX(-@(info.Center)%)">
+                    <span class="tip-time">@info.Time</span>
+                    <span class="tip-rate">@info.Rate</span>
+                    @if (info.Snow is not null)
+                    {
+                        <span class="tip-snow">@info.Snow</span>
+                    }
+                    <span class="tip-kind" style="color:@info.KindColor">@info.Kind</span>
+                    <span class="tip-dbz">@info.Reflectivity</span>
+                </div>
+            }
+        </div>
+
+        @if (Weather.IsMixed)
+        {
+            <div class="legend">
+                @foreach (var item in Weather.Legend)
+                {
+                    <span class="legend-item"><span class="legend-swatch" style="background:@item.Color"></span>@item.Name</span>
+                }
+            </div>
+        }
+
+        <div class="axis">
+            @foreach (var tick in Weather.MinuteAxis)
+            {
+                <span class="tick" style="left:@(tick.Left)%"><span>@tick.Offset</span><span class="tick-clock">@tick.Clock</span></span>
+            }
+        </div>
+        <span class="chart-hint">Přejeďte prstem po grafu pro podrobnosti o sloupci</span>
+    </section>
+
+    <section class="card events">
+        @foreach (var e in Weather.Events)
+        {
+            <div class="event">
+                <span class="event-key">@e.Key</span>
+                <span class="event-value">@e.Value</span>
+            </div>
+        }
+    </section>
+
+    <button type="button" class="alert-btn @(Alerts.Enabled ? "on" : "")" @onclick="Alerts.ToggleAsync">
+        @(Alerts.Enabled ? "✓  Upozornění na srážky zapnuta" : "Upozornit mě, až začne pršet nebo sněžit")
+    </button>
+</div>
+
+@code {
+    [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+
+    // How long the details stay after the finger is lifted, to read them.
+    static readonly TimeSpan ShowAfterRelease = TimeSpan.FromSeconds(4);
+
+    ElementReference chart;
+    double chartWidth;
+    bool touching;
+    int? selected;
+    CancellationTokenSource? hide;
+
+    ForecastView.BarInfo? Selected =>
+        selected is { } i && i < Weather.MinuteBarInfo.Count ? Weather.MinuteBarInfo[i] : null;
+
+    protected override void OnInitialized() => Alerts.Changed += OnChanged;
+
+    void OnChanged() => InvokeAsync(StateHasChanged);
+
+    async Task TouchAsync(PointerEventArgs e)
+    {
+        hide?.Cancel();
+        touching = true;
+        // Measured on each touch: the chart is as wide as the screen, which can change (rotation).
+        chartWidth = await JS.InvokeAsync<double>("vibeWeather.width", chart);
+        Pick(e.OffsetX);
+    }
+
+    void Move(PointerEventArgs e)
+    {
+        if (touching) Pick(e.OffsetX);
+    }
+
+    // The bar under x (from the chart's left edge); the chart's children ignore the pointer, so x is always
+    // relative to the chart, also once the finger moves past its edges. Reaching another bar ticks as strongly as
+    // it rains or snows there; dry bars stay still.
+    void Pick(double x)
+    {
+        int count = Weather.MinuteBarInfo.Count;
+        if (count == 0 || chartWidth <= 0) return;
+        int bar = Math.Clamp((int)(x / chartWidth * count), 0, count - 1);
+        if (bar == selected) return;
+        selected = bar;
+        Haptics.Tick(Weather.MinuteBarInfo[bar].Strength);
+    }
+
+    async Task ReleaseAsync(PointerEventArgs e)
+    {
+        if (!touching) return;
+        touching = false;
+        hide = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(ShowAfterRelease, hide.Token);
+            selected = null;
+        }
+        catch (TaskCanceledException)
+        {
+            // Touched again: keep showing.
+        }
+    }
+
+    public void Dispose()
+    {
+        Alerts.Changed -= OnChanged;
+        hide?.Cancel();
+    }
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Window background while the app starts on Android 7-11: the brand background with the sun where the in-app
+     splash continues from it. Android 12+ uses the splash-screen attributes in VibeWeather.SplashTheme instead. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:opacity="opaque">
+    <item android:drawable="@color/vw_splash_bg" />
+    <item android:width="288dp" android:height="288dp" android:gravity="center" android:drawable="@drawable/vw_splash_sun" />
+</layer-list>

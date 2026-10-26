@@ -1,0 +1,100 @@
+@page "/locations"
+@layout OverlayLayout
+@implements IDisposable
+@inject WeatherState State
+@inject GeofenceManager Geofences
+@inject DisplaySettings Display
+@inject IJSRuntime JS
+
+<div class="sheet">
+    <header class="sheet-head">
+        <h1 class="sheet-title">Místa</h1>
+        <button type="button" class="done-btn" @onclick="Close">Hotovo</button>
+    </header>
+
+    <div class="sheet-body">
+        <PlaceSearch>
+            <ResultAction Context="place">
+                @if (State.IsSaved(place))
+                {
+                    <span class="added">✓ Přidáno</span>
+                }
+                else
+                {
+                    <button type="button" class="pill" @onclick="() => State.AddLocation(place)">Přidat</button>
+                }
+            </ResultAction>
+        </PlaceSearch>
+
+        <section class="group">
+            <span class="mono-label group-label">ULOŽENÁ MÍSTA · NEJNOVĚJŠÍ NAHOŘE</span>
+            <div class="group-card">
+                @if (State.SavedLocations.Count == 0)
+                {
+                    <div class="row hint">Žádná uložená místa. Přidejte je vyhledáním nahoře.</div>
+                }
+                @foreach (var place in State.SavedLocations)
+                {
+                    <div class="row place-row">
+                        <div class="row-text">
+                            <span class="place-name">@place.Name</span>
+                            <span class="row-sub">@place.Region</span>
+                        </div>
+                        <button type="button" class="pill outline" @onclick="() => State.RemoveLocation(place)">Odebrat</button>
+                    </div>
+                }
+            </div>
+            <span class="group-note">Nastavení ukazuje @Czech.Count(WeatherState.RecentLocationCount, "naposledy přidané místo", "naposledy přidaná místa", "naposledy přidaných míst").</span>
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">ZÓNY</span>
+            <div class="group-card">
+                @foreach (var fence in Geofences.Places)
+                {
+                    <div class="row place-row">
+                        <div class="row-text">
+                            <span class="place-line">
+                                <span class="place-name">@fence.Place.Name</span>
+                                @if (Geofences.IsInside(fence.Id))
+                                {
+                                    <span class="chip-inside">UVNITŘ</span>
+                                }
+                            </span>
+                            <span class="row-sub">Do @GeofenceManager.FormatRadius(fence.RadiusMeters) · @fence.Place.Region</span>
+                            @if (GeofenceManager.FormatLastEntered(fence, Display.Units) is { } entered)
+                            {
+                                <span class="row-sub">@entered</span>
+                            }
+                        </div>
+                        <button type="button" class="pill outline" @onclick="() => Geofences.RemoveAsync(fence.Id)">Odebrat</button>
+                    </div>
+                }
+                <a href="geofences/new" class="row new-row">
+                    <Icon Path="@WeatherIcons.Plus" Size="20" StrokeWidth="1.8" Class="new-icon" />
+                    <span class="new-label">Nová zóna</span>
+                    <span class="new-arrow">→</span>
+                </a>
+            </div>
+            <span class="group-note">Zóna je oblast kolem místa. Když jste uvnitř zóny, její místo se zobrazí v Nastavení. Po příjezdu se z něj stane místo pro předpověď a dostanete oznámení.</span>
+        </section>
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        State.Changed += OnChanged;
+        Geofences.Changed += OnChanged;
+    }
+
+    async Task Close() => await JS.InvokeVoidAsync("history.back");
+
+    void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        State.Changed -= OnChanged;
+        Geofences.Changed -= OnChanged;
+    }
+}

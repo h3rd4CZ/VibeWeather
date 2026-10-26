@@ -1,0 +1,116 @@
+@* City search with Open-Meteo geocoding: a search field, then a RESULTS card whose rows end with ResultAction. *@
+@implements IDisposable
+@inject ILocationSearch LocationSearch
+@inject ErrorReporter Errors
+
+@* A form, so the keyboard's search key submits: that searches right away instead of waiting for the pause. *@
+<form class="search-form" @onsubmit="SearchNowAsync">
+    <label class="search">
+        <Icon Path="@WeatherIcons.Search" Size="20" StrokeWidth="1.8" />
+        <input type="search" class="search-input" placeholder="@Placeholder"
+               autocomplete="off" enterkeyhint="search"
+               @bind="query" @bind:event="oninput" @bind:after="OnTypedAsync" />
+    </label>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(query))
+{
+    <section class="group">
+        <span class="mono-label group-label">VÝSLEDKY</span>
+        <div class="group-card">
+            @if (searchError is not null)
+            {
+                <button type="button" class="row hint hint-retry" @onclick="SearchNowAsync">@searchError · Klepnutím to zkusíte znovu</button>
+            }
+            else if (Hint is { } hint)
+            {
+                <div class="row hint">@hint</div>
+            }
+            @foreach (var place in results)
+            {
+                <div class="row place-row">
+                    <div class="row-text">
+                        <span class="place-name">@place.Name</span>
+                        <span class="row-sub">@place.Region</span>
+                    </div>
+                    @ResultAction(place)
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    // Typing on a phone pauses 200–400 ms between letters; wait for a longer pause before asking the service.
+    static readonly TimeSpan Debounce = TimeSpan.FromMilliseconds(600);
+
+    [Parameter, EditorRequired] public RenderFragment<WeatherLocation> ResultAction { get; set; } = default!;
+    [Parameter] public string Placeholder { get; set; } = "Hledat město nebo PSČ";
+
+    string query = "";
+    List<WeatherLocation> results = [];
+    bool searching;
+    string? searchError;
+    CancellationTokenSource? searchCts;
+    // The text the latest search is for (pending, running or done), so repeated input events for the same text
+    // (Android keyboards send them, and trailing spaces don't change the search) don't start it over.
+    string? searchedFor;
+
+    string? Hint =>
+        Normalized.Length < 2 ? "Zadejte aspoň dvě písmena"
+        : searching && results.Count == 0 ? "Hledám…"
+        : !searching && results.Count == 0 ? "Žádná místa nenalezena"
+        : null;
+
+    string Normalized => string.Join(' ', query.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+    Task OnTypedAsync() => Normalized == searchedFor ? Task.CompletedTask : SearchAsync(Debounce);
+
+    Task SearchNowAsync() => SearchAsync(TimeSpan.Zero);
+
+    // Waits for typing to pause, and drops results of searches that a newer keystroke replaced.
+    async Task SearchAsync(TimeSpan delay)
+    {
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+        searchCts = new CancellationTokenSource();
+        var token = searchCts.Token;
+        var text = Normalized;
+        searchedFor = text;
+        searchError = null;
+
+        if (text.Length < 2)
+        {
+            results = [];
+            searching = false;
+            return;
+        }
+
+        searching = true;
+        try
+        {
+            if (delay > TimeSpan.Zero) await Task.Delay(delay, token);
+            results = [.. await LocationSearch.SearchAsync(text, token)];
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (WeatherProviderException ex)
+        {
+            results = [];
+            searchError = ex.IsThrottled ? "Vyhledávání míst je teď přetížené" : ex.Message;
+            // Only the hint row: a popup while typing would get in the way. Search runs on a separate service from
+            // the forecast, so its overload doesn't stop the rest of the app. The next letter typed tries again.
+            searchedFor = null;
+            Errors.Report(ex, "Vyhledávání míst", popup: false);
+        }
+        searching = false;
+    }
+
+    public void Dispose()
+    {
+        searchCts?.Cancel();
+        searchCts?.Dispose();
+    }
+}

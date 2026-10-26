@@ -1,0 +1,40 @@
+.search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 16px;
+    border-radius: 18px;
+    background: var(--surf);
+    color: var(--mut);
+}
+
+/* 16px keeps the WebView from zooming in on focus. */
+.search-input {
+    flex: 1;
+    min-width: 0;
+    height: 52px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font: 400 16px var(--font-sans);
+}
+
+    .search-input::placeholder {
+        color: var(--mut);
+    }
+
+    .search-input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+    }
+
+/* Errors can be retried with a tap; styled like the plain hint row. */
+.hint-retry {
+    width: 100%;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+}

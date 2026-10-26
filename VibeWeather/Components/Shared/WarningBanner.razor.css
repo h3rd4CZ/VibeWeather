@@ -1,0 +1,44 @@
+/* Orange for warnings, red for the most important ones; tinted so it reads in light and dark mode. */
+.warning-banner {
+    --warn: oklch(0.72 0.17 55);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 20px;
+    background: color-mix(in oklch, var(--warn) 18%, var(--surf));
+    box-shadow: inset 4px 0 0 var(--warn);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+    .warning-banner.severe {
+        --warn: oklch(0.6 0.2 27);
+    }
+
+    .warning-banner ::deep .warning-icon {
+        stroke: var(--warn);
+        flex: none;
+    }
+
+.warning-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.warning-name {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.warning-when {
+    font-size: 13px;
+    color: var(--mut);
+}
+
+.warning-arrow {
+    color: var(--mut);
+}

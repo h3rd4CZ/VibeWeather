@@ -1,0 +1,147 @@
+@page "/geofences/new"
+@layout OverlayLayout
+@inject GeofenceManager Geofences
+@inject IGeofenceMonitor Monitor
+@inject ErrorReporter Errors
+@inject IJSRuntime JS
+
+<div class="sheet">
+    <header class="sheet-head">
+        <h1 class="sheet-title">Nová zóna</h1>
+        <button type="button" class="done-btn" @onclick="Close">Zrušit</button>
+    </header>
+
+    <div class="sheet-body">
+        @if (place is null)
+        {
+            <section class="group">
+                <span class="mono-label group-label">MÍSTO</span>
+                <PlaceSearch Placeholder="Vyhledejte místo, které chcete hlídat">
+                    <ResultAction Context="result">
+                        <button type="button" class="pill" @onclick="() => place = result">Vybrat</button>
+                    </ResultAction>
+                </PlaceSearch>
+            </section>
+        }
+        else
+        {
+            <section class="group">
+                <span class="mono-label group-label">MÍSTO</span>
+                <div class="group-card">
+                    <div class="row place-row">
+                        <div class="row-text">
+                            <span class="place-name">@place.Name</span>
+                            <span class="row-sub">@place.Region</span>
+                        </div>
+                        <button type="button" class="pill outline" @onclick="() => place = null">Změnit</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="group">
+                <span class="mono-label group-label">POLOMĚR</span>
+                <div class="group-card radius-card">
+                    <div class="radius-value">@GeofenceManager.FormatRadius(Radius)</div>
+                    <input type="range" class="radius-slider" min="0" max="@SliderSteps" step="1"
+                           style="--fill:@(Fill)%" aria-label="Poloměr"
+                           @bind="slider" @bind:event="oninput" />
+                    <div class="radius-scale">
+                        <span>@GeofenceManager.FormatRadius(GeofenceManager.MinRadiusMeters)</span>
+                        <span>@GeofenceManager.FormatRadius(GeofenceManager.MaxRadiusMeters)</span>
+                    </div>
+                </div>
+                <span class="group-note">Zóna je oblast kolem místa: jste uvnitř, když jste od místa @place.Name nejvýše v této vzdálenosti. Pod zhruba 150 m se příjezd nemusí zachytit.</span>
+            </section>
+
+            @if (step == Step.Background)
+            {
+                <BackgroundLocationPrompt AfterText="zónu vytvořte" RetryLabel="Povoleno, vytvořit zónu" OnGranted="OnBackgroundGranted">
+                    Aby aplikace poznala váš příjezd i ve chvíli, kdy je zavřená, potřebuje Android přístup k poloze nastavený na
+                    <strong>Povolit vždy</strong>. Na další obrazovce s oprávněními Androidu tuto možnost vyberte.
+                </BackgroundLocationPrompt>
+            }
+
+            @if (error is not null)
+            {
+                <span class="error">@error</span>
+            }
+
+            @if (step == Step.Choose)
+            {
+                <button type="button" class="primary-btn" disabled="@busy" @onclick="CreateAsync">
+                    @(busy ? "Vytvářím…" : "Vytvořit zónu")
+                </button>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    enum Step { Choose, Background }
+
+    // The slider is logarithmic: equal steps multiply the radius, so 100 m–10 km fits one comfortable range.
+    const int SliderSteps = 100;
+
+    WeatherLocation? place;
+    int slider = ToSlider(500);
+    Step step = Step.Choose;
+    bool busy;
+    string? error;
+
+    int Radius => FromSlider(slider);
+    double Fill => slider * 100.0 / SliderSteps;
+
+    static int FromSlider(int value)
+    {
+        double ratio = (double)GeofenceManager.MaxRadiusMeters / GeofenceManager.MinRadiusMeters;
+        double meters = GeofenceManager.MinRadiusMeters * Math.Pow(ratio, (double)value / SliderSteps);
+        // Round to steps that read well: 50 m below 1 km, 100 m above.
+        return meters < 1000 ? (int)Math.Round(meters / 50) * 50 : (int)Math.Round(meters / 100) * 100;
+    }
+
+    static int ToSlider(int meters)
+    {
+        double ratio = (double)GeofenceManager.MaxRadiusMeters / GeofenceManager.MinRadiusMeters;
+        return (int)Math.Round(Math.Log((double)meters / GeofenceManager.MinRadiusMeters, ratio) * SliderSteps);
+    }
+
+    async Task CreateAsync()
+    {
+        if (place is null) return;
+        busy = true;
+        error = null;
+        try
+        {
+            if (!await Monitor.RequestForegroundPermissionAsync())
+            {
+                error = "Zóny potřebují přístup k poloze. Pokračujte jeho povolením.";
+                return;
+            }
+            if (!await Monitor.HasBackgroundPermissionAsync())
+            {
+                step = Step.Background;
+                return;
+            }
+            await Monitor.RequestNotificationPermissionAsync();
+            await Geofences.AddAsync(place, Radius);
+            await Close();
+        }
+        catch (GeofenceException ex)
+        {
+            error = ex.Message;
+            Errors.Report(ex, "Vytvoření zóny", popup: false);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    async Task OnBackgroundGranted()
+    {
+        step = Step.Choose;
+        await CreateAsync();
+    }
+
+    async Task Close() => await JS.InvokeVoidAsync("history.back");
+}

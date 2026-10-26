@@ -1,0 +1,76 @@
+.entry {
+    padding: 4px 0;
+}
+
+.entry-head {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 0;
+    border: 0;
+    background: none;
+    text-align: left;
+}
+
+.entry-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kind {
+    padding: 2px 7px;
+    border-radius: 8px;
+    font: 500 10.5px var(--font-mono);
+    letter-spacing: .06em;
+}
+
+    .kind.general {
+        --tone: oklch(0.55 0.18 25);
+        background: color-mix(in oklch, var(--tone) 12%, transparent);
+        color: var(--tone);
+    }
+
+    .kind.throttled {
+        --tone: oklch(0.6 0.15 62);
+        background: color-mix(in oklch, var(--tone) 14%, transparent);
+        color: var(--tone);
+    }
+
+.entry-source {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.entry-detail {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    max-height: 260px;
+    overflow: auto;
+    border-radius: 12px;
+    background: var(--bg);
+    font: 400 11px/1.5 var(--font-mono);
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.path {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .actions .primary-btn.secondary {
+        border: 1.5px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+    }

@@ -1,0 +1,24 @@
+@* Active official warnings for the selected place, most important first; each opens its detail page. *@
+@implements IDisposable
+@inject SevereWeatherMonitor Severe
+@inject DisplaySettings Display
+
+@foreach (var warning in Severe.Active)
+{
+    <a href="warning/@Uri.EscapeDataString(warning.Id)" class="warning-banner @(warning.IsSevere ? "severe" : "")">
+        <Icon Path="@WeatherIcons.Warning" Size="22" StrokeWidth="1.9" Class="warning-icon" />
+        <span class="warning-text">
+            <span class="warning-name">Výstraha · @warning.Name</span>
+            <span class="warning-when">@WarningText.Period(warning, Display.Units, DateTimeOffset.Now)</span>
+        </span>
+        <span class="warning-arrow">→</span>
+    </a>
+}
+
+@code {
+    protected override void OnInitialized() => Severe.Changed += OnChanged;
+
+    void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Severe.Changed -= OnChanged;
+}

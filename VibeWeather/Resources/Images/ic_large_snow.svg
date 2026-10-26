@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, snow: three snow-blue flakes under the cloud. -->
+    <g fill="#BBC5D1">
+        <rect x="19" y="36" width="62" height="24" rx="12" />
+        <circle cx="40" cy="33" r="17" />
+        <circle cx="63" cy="39" r="12" />
+    </g>
+    <g fill="none" stroke="#5AAAC9" stroke-width="4.5" stroke-linecap="round">
+        <path d="M30 68v14M23.9 71.5l12.2 7M23.9 78.5l12.2-7" />
+        <path d="M50 76v14M43.9 79.5l12.2 7M43.9 86.5l12.2-7" />
+        <path d="M70 68v14M63.9 71.5l12.2 7M63.9 78.5l12.2-7" />
+    </g>
+</svg>

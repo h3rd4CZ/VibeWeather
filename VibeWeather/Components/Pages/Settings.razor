@@ -1,0 +1,608 @@
+@page "/settings"
+@layout OverlayLayout
+@implements IDisposable
+@inject WeatherState State
+@inject ErrorReporter Errors
+@inject ErrorLog Log
+@inject PrecipAlertMonitor Alerts
+@inject MorningSummaryService Morning
+@inject SevereWeatherMonitor Severe
+@inject ThemeService Theme
+@inject DisplaySettings Display
+@inject WeatherSourceSettings Source
+@inject AzureMapsWeatherProvider AzureMaps
+@inject IMorningSummaryScheduler MorningScheduler
+@inject IGeofenceMonitor Monitor
+@inject LocationSelection Selection
+@inject ITimeDialog TimeDialog
+@inject IJSRuntime JS
+
+<div class="sheet">
+    <header class="sheet-head">
+        <h1 class="sheet-title">Nastavení</h1>
+        <button type="button" class="done-btn" @onclick="Close">Hotovo</button>
+    </header>
+
+    <div class="sheet-body">
+        <section class="group">
+            <span class="mono-label group-label">MÍSTA</span>
+            <div class="group-card">
+                @foreach (var (loc, fence) in Locations)
+                {
+                    var summary = State.Summaries.GetValueOrDefault(loc.Key);
+                    <button type="button" class="row loc-row" @onclick="() => Select(loc, fence)">
+                        <span class="loc-check @(loc.Key == State.SelectedKey ? "on" : "")">✓</span>
+                        <div class="row-text">
+                            <span class="loc-name-line">
+                                <span class="loc-name">@loc.Name</span>
+                                @if (fence is not null)
+                                {
+                                    <span class="chip-inside">UVNITŘ</span>
+                                }
+                            </span>
+                            <span class="row-sub">@Subtitle(loc, fence, summary)</span>
+                        </div>
+                        <span class="loc-temp">@(summary is null ? "" : Units.Temp(summary.Temp))</span>
+                        @if (summary is not null)
+                        {
+                            <WeatherIcon Condition="WeatherCodes.Condition(summary.Code, summary.IsDay)" />
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                    </button>
+                }
+                <a href="locations" class="row manage-row">
+                    <Icon Path="@WeatherIcons.Plus" Size="20" StrokeWidth="1.8" Class="manage-icon" />
+                    <span class="manage-label">Přidat nebo odebrat místa</span>
+                    <span class="manage-count">Uloženo: @State.SavedLocations.Count&nbsp;&nbsp;→</span>
+                </a>
+                <div class="row late-row">
+                    <div class="row-text">
+                        <span>Obnovit aktuální polohu</span>
+                        <span class="row-sub">@(positionStatus ?? "Zjistí polohu hned, i když ještě platí")</span>
+                    </div>
+                    <button type="button" class="pill" disabled="@refreshingPosition" @onclick="RefreshPositionAsync">
+                        @(refreshingPosition ? "Zjišťuji…" : "Obnovit")
+                    </button>
+                </div>
+                <div class="row stack-row">
+                    <div class="row-text">
+                        <span>Platnost aktuální polohy</span>
+                        <span class="row-sub">Jak dlouho se poloha používá, než se zjistí znovu</span>
+                    </div>
+                    <Segmented Options="PositionAgeOptions" Selected="@PositionAgeLabel(Selection.MaxPositionAge)"
+                               SelectedChanged="SelectPositionAge" />
+                </div>
+            </div>
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">ZDROJ POČASÍ</span>
+            <div class="group-card">
+                <div class="row setting-row">
+                    <span>Zdroj</span>
+                    <Segmented Options='["Open-Meteo", "Azure Maps"]' Selected="@SourceName(Source.Source)"
+                               SelectedChanged="SelectSource" />
+                </div>
+                @if (azureKeyHint is not null)
+                {
+                    <div class="row late-row">
+                        <div class="row-text">
+                            <span class="toggle-label">Klíč Azure Maps</span>
+                            <span class="row-sub key-hint">@azureKeyHint</span>
+                        </div>
+                        <button type="button" class="pill outline" @onclick="RemoveKey">Odebrat</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="row key-row">
+                        <span class="toggle-label">Klíč Azure Maps</span>
+                        <form class="key-form" @onsubmit="SaveKey">
+                            <input type="password" class="key-input" placeholder="Klíč předplatného" autocomplete="off"
+                                   spellcheck="false" aria-label="Klíč předplatného Azure Maps" @bind="keyDraft" @bind:event="oninput" disabled="@checkingKey" />
+                            <button type="submit" class="pill" disabled="@(checkingKey || string.IsNullOrWhiteSpace(keyDraft))">
+                                @(checkingKey ? "Ověřuji…" : "Uložit")
+                            </button>
+                        </form>
+                        <span class="row-sub @(keyError is null ? "" : "key-error")">
+                            @(keyError ?? "Najdete ho v účtu Azure Maps → Ověřování. Každý požadavek se účtuje na tento účet.")
+                        </span>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">JEDNOTKY</span>
+            <div class="group-card">
+                <div class="row setting-row">
+                    <span>Teplota</span>
+                    <Segmented Options="TemperatureOptions" Selected="@TemperatureOptions[(int)Units.Temperature]"
+                               SelectedChanged="option => Display.SetTemperature((TemperatureUnit)Array.IndexOf(TemperatureOptions, option))" />
+                </div>
+                <div class="row setting-row">
+                    <span>Rychlost větru</span>
+                    <Segmented Options="WindOptions" Selected="@WindOptions[(int)Units.Wind]"
+                               SelectedChanged="option => Display.SetWind((WindSpeedUnit)Array.IndexOf(WindOptions, option))" />
+                </div>
+            </div>
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">ZOBRAZENÍ</span>
+            <div class="group-card">
+                <div class="row setting-row">
+                    <span>Vzhled</span>
+                    <Segmented Options="ThemeOptions" Selected="@ThemeOptions[(int)Theme.Mode]"
+                               SelectedChanged="option => Theme.SetMode((ThemeMode)Array.IndexOf(ThemeOptions, option))" />
+                </div>
+                <div class="row setting-row">
+                    <span>Formát času</span>
+                    <Segmented Options="ClockOptions" Selected="@ClockOptions[(int)Units.Clock]"
+                               SelectedChanged="option => Display.SetClock((TimeFormat)Array.IndexOf(ClockOptions, option))" />
+                </div>
+            </div>
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">OZNÁMENÍ</span>
+            <div class="group-card">
+                <button type="button" class="row toggle-row toggle-btn" @onclick="() => ToggleAlarmAsync(Alarm.Precip)">
+                    <div class="row-text">
+                        <span class="toggle-label">Upozornění na srážky</span>
+                        <span class="row-sub">@AlertsSubtitle</span>
+                    </div>
+                    <div class="switch @(Alerts.Enabled ? "on" : "")" role="switch" aria-checked="@(Alerts.Enabled ? "true" : "false")">
+                        <div class="switch-knob"></div>
+                    </div>
+                </button>
+                @if (Alerts.Enabled)
+                {
+                    @* The monitor's plan, for checking the timing: when the next check runs and why then. *@
+                    <div class="row plan-row">
+                        <div class="plan-line">
+                            <span class="mono-label plan-key">DALŠÍ KONTROLA</span>
+                            <span class="plan-time">@(Alerts.NextCheck is { } next ? FormatTime(next) : "–")</span>
+                        </div>
+                        <span class="row-sub">@Alerts.NextCheckReason</span>
+                        @if (Alerts.LastCheck is { } last)
+                        {
+                            <span class="row-sub plan-last">Poslední kontrola @FormatTime(last)</span>
+                        }
+                    </div>
+                    @* No checks outside these hours (e.g. at night); the first comes when they start. *@
+                    <div class="row hours-row">
+                        <div class="row-text">
+                            <span>Pracovní dny</span>
+                            <span class="row-sub">Doba upozornění, po–pá</span>
+                        </div>
+                        <div class="hours-range">
+                            <button type="button" class="time-pill" aria-label="Začátek doby upozornění v pracovní dny"
+                                    @onclick='() => PickTime(Alerts.Hours.WeekdayFrom, "Upozornění v pracovní dny od", t => Alerts.SetHours(Alerts.Hours with { WeekdayFrom = t }))'>
+                                @FormatTime(Alerts.Hours.WeekdayFrom)
+                            </button>
+                            <span class="row-sub">–</span>
+                            <button type="button" class="time-pill" aria-label="Konec doby upozornění v pracovní dny"
+                                    @onclick='() => PickTime(Alerts.Hours.WeekdayTo, "Upozornění v pracovní dny do", t => Alerts.SetHours(Alerts.Hours with { WeekdayTo = t }))'>
+                                @FormatTime(Alerts.Hours.WeekdayTo)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row hours-row">
+                        <div class="row-text">
+                            <span>Víkend</span>
+                            <span class="row-sub">Doba upozornění, so–ne</span>
+                        </div>
+                        <div class="hours-range">
+                            <button type="button" class="time-pill" aria-label="Začátek doby upozornění o víkendu"
+                                    @onclick='() => PickTime(Alerts.Hours.WeekendFrom, "Upozornění o víkendu od", t => Alerts.SetHours(Alerts.Hours with { WeekendFrom = t }))'>
+                                @FormatTime(Alerts.Hours.WeekendFrom)
+                            </button>
+                            <span class="row-sub">–</span>
+                            <button type="button" class="time-pill" aria-label="Konec doby upozornění o víkendu"
+                                    @onclick='() => PickTime(Alerts.Hours.WeekendTo, "Upozornění o víkendu do", t => Alerts.SetHours(Alerts.Hours with { WeekendTo = t }))'>
+                                @FormatTime(Alerts.Hours.WeekendTo)
+                            </button>
+                        </div>
+                    </div>
+                }
+                <button type="button" class="row toggle-row toggle-btn" @onclick="() => ToggleAlarmAsync(Alarm.Morning)">
+                    <div class="row-text">
+                        <span class="toggle-label">Ranní přehled</span>
+                        <span class="row-sub">@MorningSubtitle</span>
+                    </div>
+                    <div class="switch @(Morning.Enabled ? "on" : "")" role="switch" aria-checked="@(Morning.Enabled ? "true" : "false")">
+                        <div class="switch-knob"></div>
+                    </div>
+                </button>
+                @if (Morning.Enabled)
+                {
+                    <button type="button" class="row time-row toggle-btn" aria-label="Čas ranního přehledu v pracovní dny"
+                            @onclick='() => PickTime(Morning.WeekdayTime, "Pracovní dny (po–pá)", Morning.SetWeekdayTime)'>
+                        <span>Pracovní dny <span class="row-sub">po–pá</span></span>
+                        <span class="time-pill">@FormatTime(Morning.WeekdayTime)</span>
+                    </button>
+                    <button type="button" class="row time-row toggle-btn" aria-label="Čas ranního přehledu o víkendu"
+                            @onclick='() => PickTime(Morning.WeekendTime, "Víkend (so–ne)", Morning.SetWeekendTime)'>
+                        <span>Víkend <span class="row-sub">so–ne</span></span>
+                        <span class="time-pill">@FormatTime(Morning.WeekendTime)</span>
+                    </button>
+                }
+                @* Both use exact alarms, under the same permission. *@
+                @if ((Alerts.Enabled && !Alerts.OnTime) || (Morning.Enabled && !Morning.OnTime))
+                {
+                    <div class="row late-row">
+                        <div class="row-text">
+                            <span class="toggle-label">Oznámení mohou přijít pozdě</span>
+                            <span class="row-sub">Povolte „Budíky a připomenutí“, aby upozornění na srážky i ranní přehled přicházely včas</span>
+                        </div>
+                        <button type="button" class="pill" @onclick="Morning.RequestOnTime">Povolit</button>
+                    </div>
+                }
+                @* Allowed when switched on, but it can be taken away in the system settings later. *@
+                @if (backgroundMissing)
+                {
+                    <div class="row late-row">
+                        <div class="row-text">
+                            <span class="toggle-label">Poloha na pozadí není povolena</span>
+                            <span class="row-sub">Oznámení použijí poslední známou polohu. Povolte přístup k poloze „Povolit vždy“.</span>
+                        </div>
+                        <button type="button" class="pill" @onclick="Monitor.OpenAppSettings">Povolit</button>
+                    </div>
+                }
+                <button type="button" class="row toggle-row toggle-btn" @onclick="() => ToggleAlarmAsync(Alarm.Severe)">
+                    <div class="row-text">
+                        <span class="toggle-label">Nebezpečné počasí</span>
+                        <span class="row-sub">@SevereSubtitle</span>
+                    </div>
+                    <div class="switch @(Severe.Enabled ? "on" : "")" role="switch" aria-checked="@(Severe.Enabled ? "true" : "false")">
+                        <div class="switch-knob"></div>
+                    </div>
+                </button>
+                @if (alarmError is not null)
+                {
+                    <div class="row plan-row"><span class="row-sub key-error">@alarmError</span></div>
+                }
+                @if (Severe.Enabled)
+                {
+                    @* When the warnings are checked next, and what the last check found. *@
+                    <div class="row plan-row">
+                        <div class="plan-line">
+                            <span class="mono-label plan-key">DALŠÍ KONTROLA</span>
+                            <span class="plan-time">@(Severe.NextCheck is { } nextSevere ? FormatTime(nextSevere) : "–")</span>
+                        </div>
+                        <span class="row-sub">@Severe.NextCheckReason</span>
+                        @if (Severe.LastCheck is { } lastSevere)
+                        {
+                            <span class="row-sub plan-last">Poslední kontrola @FormatTime(lastSevere)</span>
+                        }
+                    </div>
+                }
+            </div>
+            @if (pendingAlarm is not null)
+            {
+                <BackgroundLocationPrompt AfterText="oznámení zapněte" RetryLabel="Povoleno, zapnout" OnGranted="EnablePendingAsync">
+                    Aby upozornění a ranní přehled sledovaly vaši aktuální polohu i při zavřené aplikaci, potřebuje Android
+                    přístup k poloze nastavený na <strong>Povolit vždy</strong>. Na další obrazovce s oprávněními Androidu
+                    tuto možnost vyberte.
+                </BackgroundLocationPrompt>
+            }
+        </section>
+
+        <section class="group">
+            <span class="mono-label group-label">DIAGNOSTIKA</span>
+            <div class="group-card">
+                <a href="errors" class="row link-row">
+                    <div class="row-text">
+                        <span class="toggle-label">Protokol chyb</span>
+                        <span class="row-sub">@LogSummary</span>
+                    </div>
+                    <span class="link-arrow">→</span>
+                </a>
+                @if (IsDebugBuild)
+                {
+                <div class="row debug-row">
+                    <span class="row-sub">Ladicí sestavení · vyzkoušejte zpracování chyb</span>
+                    <div class="debug-actions">
+                        <button type="button" class="pill outline" @onclick="SimulateThrottling">Omezení požadavků</button>
+                        <button type="button" class="pill outline" @onclick="SimulateGeneral">Obecná chyba</button>
+                        <button type="button" class="pill outline" @onclick="() => crash = true">Pád obrazovky</button>
+                        <button type="button" class="pill outline" @onclick="TestMorningSummary">Ranní přehled za 10 s</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+@if (crash)
+{
+    // Debug only: an exception while rendering, caught by the layout's error boundary.
+    throw new InvalidOperationException("Simulovaná chyba vykreslení z Nastavení → Diagnostika.");
+}
+
+@code {
+#if DEBUG
+    const bool IsDebugBuild = true;
+#else
+    const bool IsDebugBuild = false;
+#endif
+
+    bool crash;
+
+    // Weather source: the saved key shows only as its last characters.
+    string? azureKeyHint;
+    string? keyDraft;
+    string? keyError;
+    bool checkingKey;
+
+    // Labels in enum order, so a label's index is its value.
+    static readonly string[] TemperatureOptions = ["°C", "°F"];
+    static readonly string[] WindOptions = ["km/h", "mph", "m/s"];
+    static readonly string[] ClockOptions = ["12hodinový", "24hodinový"];
+    static readonly string[] ThemeOptions = ["Automaticky", "Světlý", "Tmavý"];
+    // In the order of SelectionRules.PositionAgeChoices.
+    static readonly string[] PositionAgeOptions = [.. SelectionRules.PositionAgeChoices.Select(PositionAgeLabel)];
+
+    static string PositionAgeLabel(TimeSpan age) => age.TotalHours >= 1 ? $"{age.TotalHours:0} h" : $"{age.TotalMinutes:0} min";
+
+    bool refreshingPosition;
+    // What the last refresh found, shown under its button.
+    string? positionStatus;
+
+    async Task RefreshPositionAsync()
+    {
+        refreshingPosition = true;
+        positionStatus = null;
+        bool found = await State.RefreshDevicePositionAsync();
+        refreshingPosition = false;
+        positionStatus = found
+            ? $"Nalezena poloha {State.DeviceLocation?.Name}"
+            : "Novou polohu se nepodařilo zjistit, zůstává poslední známá";
+        // The device row's temperature belongs to the new position.
+        await State.LoadSummariesAsync();
+    }
+
+    void SelectPositionAge(string option) =>
+        Selection.SetMaxPositionAge(SelectionRules.PositionAgeChoices[Array.IndexOf(PositionAgeOptions, option)]);
+
+    DisplayUnits Units => Display.Units;
+
+    static string SourceName(WeatherSource source) => source == WeatherSource.AzureMaps ? "Azure Maps" : "Open-Meteo";
+
+    async Task SelectSource(string option)
+    {
+        var source = option == "Azure Maps" ? WeatherSource.AzureMaps : WeatherSource.OpenMeteo;
+        keyError = await Source.TrySetSourceAsync(source) ? null : "Pro Azure Maps zadejte klíč předplatného.";
+    }
+
+    // Checks the key with one request before keeping it, then switches to Azure Maps.
+    async Task SaveKey()
+    {
+        var key = keyDraft?.Trim();
+        if (string.IsNullOrEmpty(key)) return;
+        checkingKey = true;
+        keyError = null;
+        try
+        {
+            await AzureMaps.ValidateKeyAsync(key);
+            await Source.SetAzureKeyAsync(key);
+            await Source.TrySetSourceAsync(WeatherSource.AzureMaps);
+            keyDraft = null;
+            azureKeyHint = Hint(key);
+        }
+        catch (AzureMapsKeyException)
+        {
+            keyError = "Služba Azure Maps tento klíč nepřijala.";
+        }
+        catch (WeatherProviderException ex)
+        {
+            keyError = $"Klíč se nepodařilo ověřit: {ex.Message}";
+        }
+        finally
+        {
+            checkingKey = false;
+        }
+    }
+
+    async Task RemoveKey()
+    {
+        await Source.RemoveAzureKeyAsync();
+        azureKeyHint = null;
+    }
+
+    static string Hint(string key) => $"Uložen · končí na {key[^Math.Min(4, key.Length)..]}";
+
+    string LogSummary
+    {
+        get
+        {
+            var entries = Log.Read();
+            return entries.Count == 0
+                ? "Žádné zaznamenané chyby"
+                : $"{Czech.Count(entries.Count, "záznam", "záznamy", "záznamů")} · poslední {entries[0].Time.ToString("d. M.", Czech.Culture)}, {Units.Time(entries[0].Time.DateTime)}";
+        }
+    }
+
+    // Debug only: fires the real alarm soon. The summary must be on, since the receiver ignores it otherwise.
+    async Task TestMorningSummary()
+    {
+        if (!Morning.Enabled) await Morning.EnableAsync();
+        MorningScheduler.Schedule(DateTime.Now.AddSeconds(10));
+    }
+
+    void SimulateThrottling() => Errors.Report(
+        new WeatherProviderException("Minutely API request limit exceeded. Please try again in one minute.",
+            isThrottled: true, retryAfter: TimeSpan.FromSeconds(60)),
+        "Načítání předpovědi (simulace)",
+        retry: State.RefreshAsync);
+
+    void SimulateGeneral() => Errors.Report(
+        new InvalidOperationException("Simulovaná chyba z Nastavení → Diagnostika."),
+        "Načítání předpovědi (simulace)",
+        retry: State.RefreshAsync);
+
+    static readonly WeatherLocation DevicePlaceholder = SelectionRules.Device;
+
+    // The device row is always first; until a position is known it offers to use the device location.
+    // Then geofenced places the device is inside, then the most recently added cities (the rest are on the
+    // Locations page). Each place is listed once; a geofence row wins over the same saved city.
+    IEnumerable<(WeatherLocation Location, GeofencePlace? Fence)> Locations
+    {
+        get
+        {
+            var device = State.DeviceLocation ?? DevicePlaceholder;
+            var rows = new List<(WeatherLocation, GeofencePlace?)> { (device, null) };
+            var listed = new HashSet<string> { device.Key };
+            foreach (var fence in State.InsideGeofences)
+                if (listed.Add(fence.Place.Key)) rows.Add((fence.Place, fence));
+            foreach (var city in State.RecentLocations)
+                if (listed.Add(city.Key)) rows.Add((city, null));
+            return rows;
+        }
+    }
+
+    enum Alarm { Precip, Morning, Severe }
+
+    // Why an alarm couldn't be switched on (no location access, no Azure Maps key), shown under the switches.
+    string? alarmError;
+    // Switched on, waiting for "Povolit vždy".
+    Alarm? pendingAlarm;
+    // An alarm is on without background location (taken away in the system settings).
+    bool backgroundMissing;
+
+    bool IsOn(Alarm alarm) => alarm switch
+    {
+        Alarm.Precip => Alerts.Enabled,
+        Alarm.Morning => Morning.Enabled,
+        _ => Severe.Enabled,
+    };
+
+    // Every alarm follows the selected location, also "Aktuální poloha" with the app closed: it needs location "Povolit vždy".
+    async Task ToggleAlarmAsync(Alarm alarm)
+    {
+        alarmError = null;
+        if (IsOn(alarm))
+        {
+            if (alarm == Alarm.Precip) Alerts.Disable();
+            else if (alarm == Alarm.Morning) Morning.Disable();
+            else Severe.Disable();
+            await CheckBackgroundAsync();
+            return;
+        }
+        if (!await Monitor.RequestForegroundPermissionAsync())
+        {
+            alarmError = "Oznámení potřebují přístup k poloze. Pokračujte jeho povolením.";
+            return;
+        }
+        if (!await Monitor.HasBackgroundPermissionAsync())
+        {
+            pendingAlarm = alarm;
+            return;
+        }
+        await EnableAsync(alarm);
+    }
+
+    async Task EnablePendingAsync()
+    {
+        if (pendingAlarm is not { } alarm) return;
+        pendingAlarm = null;
+        await EnableAsync(alarm);
+    }
+
+    async Task EnableAsync(Alarm alarm)
+    {
+        if (alarm == Alarm.Precip) await Alerts.EnableAsync();
+        else if (alarm == Alarm.Morning) await Morning.EnableAsync();
+        else alarmError = await Severe.EnableAsync();
+        await CheckBackgroundAsync();
+    }
+
+    async Task CheckBackgroundAsync() =>
+        backgroundMissing = (Alerts.Enabled || Morning.Enabled || Severe.Enabled) && !await Monitor.HasBackgroundPermissionAsync();
+
+    // " · poloha z 14:05" while "Aktuální poloha" is in effect with a position over an hour old.
+    string PositionSuffix => State.PositionNote is { } note ? $" · {note}" : "";
+
+    string SevereSubtitle => Severe.Enabled
+        ? $"Oficiální výstrahy pro {State.SelectedLocation?.Name ?? "vybrané místo"}{PositionSuffix} · Azure Maps"
+        : "Oficiální výstrahy pro vybrané místo · potřebuje klíč Azure Maps";
+
+    string MorningSubtitle => Morning.Enabled
+        ? $"Další: {MorningNext.ToString("ddd", Czech.Culture)} {Units.Time(MorningNext)} · {State.SelectedLocation?.Name ?? "vybrané místo"}{PositionSuffix}"
+        : "Jednou denně dnešní předpověď pro vybrané místo";
+
+    DateTime MorningNext => Morning.NextOccurrence(DateTime.Now);
+
+    string FormatTime(TimeOnly time) => Units.Time(time);
+
+    string FormatTime(DateTime time) => Units.TimeWithSeconds(time);
+
+    // The system's time picker dialog; Cancel leaves the time as it was.
+    async Task PickTime(TimeOnly current, string title, Action<TimeOnly> set)
+    {
+        if (await TimeDialog.PickAsync(current, title) is { } time) set(time);
+    }
+
+    // "v místě Praha" keeps the name in the nominative, so any place name reads correctly.
+    string AlertsSubtitle =>
+        $"Když {(State.SelectedLocation?.Name is { } name ? $"v místě {name}" : "na vybraném místě")} začne pršet, sněžit nebo padat mrznoucí déšť{PositionSuffix}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        Alerts.Changed += OnAlarmsChanged;
+        Morning.Changed += OnAlarmsChanged;
+        Severe.Changed += OnAlarmsChanged;
+        Source.Changed += OnSourceChanged;
+        if (await Source.GetAzureKeyAsync() is { Length: > 0 } key) azureKeyHint = Hint(key);
+        await CheckBackgroundAsync();
+        await State.LoadSummariesAsync();
+    }
+
+    string Subtitle(WeatherLocation loc, GeofencePlace? fence, LocationSummary? summary)
+    {
+        var place = loc.IsDevice
+            ? (loc == DevicePlaceholder ? "Klepnutím použijete svou polohu" : "Aktuální poloha")
+            : fence is not null ? $"Zóna · {GeofenceManager.FormatRadius(fence.RadiusMeters)}"
+            : loc.Region;
+        var text = summary is null ? place : $"{place} · {WeatherCodes.Describe(summary.Code)}";
+        // The device row always tells when its position was found, so it's clear how current it is.
+        return loc.IsDevice && loc != DevicePlaceholder && State.DevicePositionTime is { } time ? $"{text} · {time}" : text;
+    }
+
+    // Close straight away; the main screen shows progress while the new forecast loads.
+    async Task Select(WeatherLocation loc, GeofencePlace? fence)
+    {
+        _ = fence is null ? State.SelectAsync(loc) : State.SelectFenceAsync(fence);
+        await Close();
+    }
+
+    // Return to whichever tab opened Settings.
+    async Task Close() => await JS.InvokeVoidAsync("history.back");
+
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    // The alarms also report a return to the app, when background location may have been allowed or taken away.
+    void OnAlarmsChanged() => InvokeAsync(async () =>
+    {
+        await CheckBackgroundAsync();
+        StateHasChanged();
+    });
+
+    // The list's temperatures come from the new source too.
+    void OnSourceChanged() => InvokeAsync(State.LoadSummariesAsync);
+
+    public void Dispose()
+    {
+        State.Changed -= OnStateChanged;
+        Alerts.Changed -= OnAlarmsChanged;
+        Morning.Changed -= OnAlarmsChanged;
+        Severe.Changed -= OnAlarmsChanged;
+        Source.Changed -= OnSourceChanged;
+    }
+}

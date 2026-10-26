@@ -1,0 +1,58 @@
+@inject IGeofenceMonitor Monitor
+
+@* Location "Povolit vždy", which Android grants only on its own permission screen; after a refusal, how to allow it there. *@
+@if (!denied)
+{
+    <section class="card permission">
+        <span class="permission-title">Povolte přístup k poloze vždy</span>
+        <span class="permission-text">@ChildContent</span>
+        <button type="button" class="primary-btn" disabled="@busy" @onclick="AllowAsync">Pokračovat</button>
+    </section>
+}
+else
+{
+    <section class="card permission">
+        <span class="permission-title">Přístup k poloze není povolen vždy</span>
+        <span class="permission-text">
+            Otevřete nastavení aplikace, přejděte do Oprávnění → Poloha, zvolte <strong>Povolit vždy</strong>
+            a nechte zapnutou možnost <strong>Používat přesnou polohu</strong>. Pak se vraťte a @AfterText.
+        </span>
+        <button type="button" class="primary-btn" @onclick="Monitor.OpenAppSettings">Otevřít nastavení</button>
+        <button type="button" class="primary-btn secondary" disabled="@busy" @onclick="CheckAgainAsync">@RetryLabel</button>
+    </section>
+}
+
+@code {
+    /// <summary>Why it's needed, ending with what to pick on the next screen.</summary>
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+
+    /// <summary>What to do once it's allowed in the system settings, e.g. "zónu vytvořte".</summary>
+    [Parameter, EditorRequired] public string AfterText { get; set; } = "";
+
+    /// <summary>The button that goes on once it's allowed, e.g. "Povoleno, vytvořit zónu".</summary>
+    [Parameter, EditorRequired] public string RetryLabel { get; set; } = "";
+
+    /// <summary>Called when background location is granted.</summary>
+    [Parameter] public EventCallback OnGranted { get; set; }
+
+    bool denied;
+    bool busy;
+
+    async Task AllowAsync()
+    {
+        busy = true;
+        bool granted = await Monitor.RequestBackgroundPermissionAsync();
+        busy = false;
+        if (granted) await OnGranted.InvokeAsync();
+        else denied = true;
+    }
+
+    // Back from the system settings, where it may have been allowed.
+    async Task CheckAgainAsync()
+    {
+        busy = true;
+        bool granted = await Monitor.HasBackgroundPermissionAsync();
+        busy = false;
+        if (granted) await OnGranted.InvokeAsync();
+    }
+}

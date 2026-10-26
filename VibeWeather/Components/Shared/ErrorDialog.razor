@@ -1,0 +1,81 @@
+@* Popup for the current ErrorReporter report: one variant for throttling, one for general errors. *@
+@implements IDisposable
+@inject ErrorReporter Errors
+@inject NavigationManager Navigation
+
+@if (Errors.Current is { } report)
+{
+    var throttled = report.Kind == ErrorKind.Throttled;
+    <div class="scrim" @onclick="Errors.Dismiss">
+        <div class="dialog @(throttled ? "throttled" : "general")" role="alertdialog" aria-modal="true"
+             aria-labelledby="error-title" @onclick:stopPropagation="true">
+            <div class="dialog-icon">
+                <Icon Path="@(throttled ? HourglassIcon : AlertIcon)" Size="26" StrokeWidth="1.8" />
+            </div>
+
+            @if (throttled)
+            {
+                <h2 id="error-title" class="dialog-title">Služba počasí je přetížená</h2>
+                <p class="dialog-text">
+                    Open-Meteo teď omezuje počet požadavků, proto se nezdařilo @Lower(report.Source).
+                    Nejde o problém aplikace ani vašeho připojení.
+                </p>
+                <p class="dialog-quote">“@report.Message”</p>
+                <p class="dialog-text">@WhenToRetry(report.RetryAfter)</p>
+            }
+            else
+            {
+                <h2 id="error-title" class="dialog-title">Něco se pokazilo</h2>
+                <p class="dialog-text">@report.Source se nezdařilo. @report.Message</p>
+                <p class="dialog-text">Podrobnosti najdete v Nastavení → Protokol chyb.</p>
+            }
+
+            <span class="mono-label dialog-ref">KÓD @report.Reference</span>
+
+            <div class="dialog-actions">
+                @if (report.Retry is not null)
+                {
+                    <button type="button" class="primary-btn" @onclick="() => RetryAsync(report)">Zkusit znovu</button>
+                }
+                @if (!throttled)
+                {
+                    <button type="button" class="primary-btn secondary" @onclick="OpenLog">Zobrazit protokol chyb</button>
+                }
+                <button type="button" class="primary-btn secondary" @onclick="Errors.Dismiss">OK</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    const string AlertIcon = "M12 3.5l9.5 16.5h-19zM12 10v4.5M12 17.5v.01";
+    const string HourglassIcon = "M7 3.5h10M7 20.5h10M8 3.5c0 4 8 5 8 8.5s-8 4.5-8 8.5M16 3.5c0 4-8 5-8 8.5s8 4.5 8 8.5";
+
+    protected override void OnInitialized() => Errors.Changed += OnChanged;
+
+    static string Lower(string text) => text.Length == 0 ? text : char.ToLowerInvariant(text[0]) + text[1..];
+
+    static string WhenToRetry(TimeSpan? retryAfter) => retryAfter switch
+    {
+        { TotalSeconds: < 90 } => "Zkuste to znovu asi za minutu.",
+        { TotalMinutes: < 90 } t => $"Zkuste to znovu asi za {Czech.Count((long)Math.Ceiling(t.TotalMinutes), "minutu", "minuty", "minut")}.",
+        { } t => $"Zkuste to znovu asi za {Czech.Count((long)Math.Ceiling(t.TotalHours), "hodinu", "hodiny", "hodin")}.",
+        null => "Chvíli počkejte a zkuste to znovu. Bezplatné použití je omezeno počtem požadavků za minutu, hodinu a den.",
+    };
+
+    async Task RetryAsync(ErrorReport report)
+    {
+        Errors.Dismiss();
+        await report.Retry!();
+    }
+
+    void OpenLog()
+    {
+        Errors.Dismiss();
+        Navigation.NavigateTo("errors");
+    }
+
+    void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Errors.Changed -= OnChanged;
+}

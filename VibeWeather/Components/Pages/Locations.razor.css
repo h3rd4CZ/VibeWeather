@@ -1,0 +1,27 @@
+.place-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.new-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+}
+
+    .new-row ::deep .new-icon {
+        stroke: var(--acc);
+    }
+
+.new-label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.new-arrow {
+    font: 500 11px var(--font-mono);
+    color: var(--mut);
+}

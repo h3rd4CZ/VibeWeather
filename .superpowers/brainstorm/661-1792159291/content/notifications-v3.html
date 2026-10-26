@@ -1,0 +1,123 @@
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="orb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="oklch(0.84 0.085 55)"/>
+      <stop offset="1" stop-color="oklch(0.88 0.075 85)"/>
+    </linearGradient>
+    <!-- Halo masks: cut a transparent gap around the cloud -->
+    <mask id="halo-hi" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <g fill="#000"><rect x="12" y="53" width="76" height="38" rx="19"/><circle cx="40" cy="57" r="24"/><circle cx="63" cy="63" r="19"/></g>
+    </mask>
+    <mask id="halo-rain" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <g fill="#000"><rect x="12" y="29" width="76" height="38" rx="19"/><circle cx="40" cy="33" r="24"/><circle cx="63" cy="39" r="19"/></g>
+    </mask>
+    <mask id="tri-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <path d="M50 40v17M50 68v.5" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+    </mask>
+    <mask id="pin-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <circle cx="50" cy="40" r="11" fill="#000"/>
+    </mask>
+    <g id="cloud-hi"><rect x="19" y="60" width="62" height="24" rx="12"/><circle cx="40" cy="57" r="17"/><circle cx="63" cy="63" r="12"/></g>
+    <g id="cloud-rain"><rect x="19" y="36" width="62" height="24" rx="12"/><circle cx="40" cy="33" r="17"/><circle cx="63" cy="39" r="12"/></g>
+    <path id="tri" d="M50 18 L84 78 H16 Z"/>
+    <path id="pin" d="M50 12c-16 0-28 12-28 28 0 20 28 48 28 48s28-28 28-48c0-16-12-28-28-28z"/>
+
+    <!-- Small (status bar) icons, white silhouettes; one per type -->
+    <symbol id="s-sum" viewBox="0 0 100 100"><circle cx="60" cy="40" r="29" fill="#fff" mask="url(#halo-hi)"/><use href="#cloud-hi" fill="#fff"/></symbol>
+    <symbol id="s-rain" viewBox="0 0 100 100"><use href="#cloud-rain" fill="#fff"/><path d="M34 72l-4 12M52 72l-4 12M70 72l-4 12" stroke="#fff" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="s-warn" viewBox="0 0 100 100"><use href="#tri" fill="#fff" stroke="#fff" stroke-width="10" stroke-linejoin="round" mask="url(#tri-cut)"/></symbol>
+    <symbol id="s-pin" viewBox="0 0 100 100"><use href="#pin" fill="#fff" mask="url(#pin-cut)"/></symbol>
+
+    <!-- Large icons, transparent background -->
+    <symbol id="l-sum" viewBox="0 0 100 100"><circle cx="60" cy="40" r="29" fill="url(#orb)" mask="url(#halo-hi)"/><use href="#cloud-hi" fill="oklch(0.82 0.02 250)"/></symbol>
+    <symbol id="l-rain" viewBox="0 0 100 100"><use href="#cloud-rain" fill="oklch(0.82 0.02 250)"/><path d="M34 72l-4 12M52 72l-4 12M70 72l-4 12" stroke="oklch(0.66 0.13 250)" stroke-width="7" stroke-linecap="round"/></symbol>
+    <symbol id="l-warn" viewBox="0 0 100 100"><use href="#tri" fill="url(#orb)" stroke="url(#orb)" stroke-width="10" stroke-linejoin="round"/><path d="M50 40v17M50 68v.5" stroke="#15171C" stroke-width="8" stroke-linecap="round"/></symbol>
+    <symbol id="l-pin" viewBox="0 0 100 100"><use href="#pin" fill="url(#orb)" mask="url(#pin-cut)"/></symbol>
+  </defs>
+</svg>
+
+<style>
+  .shade { border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .shade.light { background:#E9E7E2; }
+  .shade.dark { background:#101215; }
+  .note { border-radius:14px; padding:10px 12px; display:flex; gap:10px; align-items:flex-start; font-family:system-ui,sans-serif; }
+  .light .note { background:#FFFFFF; color:#15171C; }
+  .dark .note { background:#22252B; color:#ECEDEF; }
+  .note .body { flex:1; min-width:0; }
+  .note .head { font-size:12px; }
+  .note .t { opacity:.6; }
+  .note .ttl { font-size:13px; font-weight:600; margin-top:3px; }
+  .bar { display:flex; gap:7px; align-items:center; padding:2px 6px; font:12px system-ui; }
+  .light .bar { color:#15171C; } .dark .bar { color:#ECEDEF; }
+  .light .bar svg { filter:brightness(0); }
+  .badge { width:20px; height:20px; border-radius:50%; padding:3px; flex:none; display:block; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .strip { display:flex; gap:18px; align-items:center; padding:12px 16px; border-radius:12px; }
+  .strip.l { background:#FFFFFF; } .strip.d { background:#22252B; }
+  .lbl { font-size:12px; opacity:.7; margin:4px 0 4px; }
+</style>
+
+<h2>Notifications v3</h2>
+<p class="subtitle">Large icons on a transparent background (no tile); status-bar icons per notification type, drawn in the 1b shapes.</p>
+
+<div class="lbl">Large icons (right side): summary · rain · warning · zone, on the light and the dark shade</div>
+<div class="pair" style="margin-bottom:10px">
+  <div class="strip l"><svg width="48" height="48"><use href="#l-sum"/></svg><svg width="48" height="48"><use href="#l-rain"/></svg><svg width="48" height="48"><use href="#l-warn"/></svg><svg width="48" height="48"><use href="#l-pin"/></svg></div>
+  <div class="strip d"><svg width="48" height="48"><use href="#l-sum"/></svg><svg width="48" height="48"><use href="#l-rain"/></svg><svg width="48" height="48"><use href="#l-warn"/></svg><svg width="48" height="48"><use href="#l-pin"/></svg></div>
+</div>
+<div class="lbl">Status bar: each notification shows its own icon</div>
+<div class="pair" style="margin-bottom:22px">
+  <div class="shade light"><div class="bar">12:45 <svg width="16" height="16"><use href="#s-sum"/></svg><svg width="16" height="16"><use href="#s-rain"/></svg><svg width="16" height="16"><use href="#s-warn"/></svg><svg width="16" height="16"><use href="#s-pin"/></svg></div></div>
+  <div class="shade dark"><div class="bar">12:45 <svg width="16" height="16"><use href="#s-sum"/></svg><svg width="16" height="16"><use href="#s-rain"/></svg><svg width="16" height="16"><use href="#s-warn"/></svg><svg width="16" height="16"><use href="#s-pin"/></svg></div></div>
+</div>
+
+<h3>Which color for the small icon circle and the app name?</h3>
+<p class="subtitle">Clearly different from the warm Orb, so the header doesn't repeat the large picture.</p>
+
+<div class="cards">
+  <div class="card" data-choice="blue" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="pair">
+      <div class="shade light">
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.52 0.1 255)">Vibe Weather <span class="t" style="color:#15171C">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.52 0.1 255)">Vibe Weather <span class="t" style="color:#15171C">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+      <div class="shade dark">
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.08 255)">Vibe Weather <span class="t" style="color:#ECEDEF">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.08 255)">Vibe Weather <span class="t" style="color:#ECEDEF">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>A · Slate blue</h3><p>The cold end of the 1b temperature scale, oklch(0.58 0.1 255). Calm, clearly not orange, contrasts with the warm pictures.</p></div>
+  </div>
+
+  <div class="card" data-choice="teal" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="pair">
+      <div class="shade light">
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.08 190)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.5 0.08 190)">Vibe Weather <span class="t" style="color:#15171C">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.08 190)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.5 0.08 190)">Vibe Weather <span class="t" style="color:#15171C">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+      <div class="shade dark">
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.08 190)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.07 190)">Vibe Weather <span class="t" style="color:#ECEDEF">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.08 190)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.07 190)">Vibe Weather <span class="t" style="color:#ECEDEF">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>B · Teal</h3><p>The middle of the 1b scale, oklch(0.58 0.08 190). Fresh and distinctive; few apps use it, so it stands out in the shade.</p></div>
+  </div>
+
+  <div class="card" data-choice="per-type" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="pair">
+      <div class="shade light">
+        <div class="note"><svg class="badge" style="background:oklch(0.6 0.13 35)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.55 0.13 35)">Vibe Weather <span class="t" style="color:#15171C">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.52 0.1 255)">Vibe Weather <span class="t" style="color:#15171C">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+      <div class="shade dark">
+        <div class="note"><svg class="badge" style="background:oklch(0.6 0.13 35)"><use href="#s-warn"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.1 35)">Vibe Weather <span class="t" style="color:#ECEDEF">· 14:20</span></div><div class="ttl">Silné bouřky · Praha</div></div><svg width="38" height="38" style="flex:none"><use href="#l-warn"/></svg></div>
+        <div class="note"><svg class="badge" style="background:oklch(0.58 0.1 255)"><use href="#s-rain"/></svg><div class="body"><div class="head" style="color:oklch(0.78 0.08 255)">Vibe Weather <span class="t" style="color:#ECEDEF">· teď</span></div><div class="ttl">Za 15 minut začne pršet</div></div><svg width="38" height="38" style="flex:none"><use href="#l-rain"/></svg></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>C · Per type</h3><p>Each type gets its own color from the 1b scale: alert red-clay, rain blue, morning summary gold, zone teal. Most informative, least uniform.</p></div>
+  </div>
+</div>

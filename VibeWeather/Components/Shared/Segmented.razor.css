@@ -1,0 +1,25 @@
+.seg {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 12px;
+    background: var(--seg-bg);
+}
+
+.seg-option {
+    min-width: 52px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--mut);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+    .seg-option.on {
+        background: var(--seg-on);
+        color: var(--ink);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
+    }

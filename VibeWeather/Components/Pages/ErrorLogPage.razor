@@ -1,0 +1,86 @@
+@page "/errors"
+@layout OverlayLayout
+@implements IDisposable
+@inject ErrorLog Log
+@inject DisplaySettings Display
+@inject IJSRuntime JS
+
+<div class="sheet">
+    <header class="sheet-head">
+        <h1 class="sheet-title">Protokol chyb</h1>
+        <button type="button" class="done-btn" @onclick="Close">Hotovo</button>
+    </header>
+
+    <div class="sheet-body">
+        <section class="group">
+            <span class="mono-label group-label">@Czech.Count(entries.Count, "ZÁZNAM", "ZÁZNAMY", "ZÁZNAMŮ") · NEJNOVĚJŠÍ NAHOŘE</span>
+            <div class="group-card">
+                @if (entries.Count == 0)
+                {
+                    <div class="row hint">Žádné zaznamenané chyby.</div>
+                }
+                @foreach (var entry in entries)
+                {
+                    var open = expanded.Contains(entry.Reference);
+                    <div class="row entry">
+                        <button type="button" class="entry-head" @onclick="() => Toggle(entry.Reference)" aria-expanded="@(open ? "true" : "false")">
+                            <span class="entry-meta">
+                                <span class="kind @(entry.Kind == ErrorKind.Throttled ? "throttled" : "general")">
+                                    @(entry.Kind == ErrorKind.Throttled ? "OMEZENÍ" : "CHYBA")
+                                </span>
+                                <span class="mono-label">@entry.Time.ToString("d. M.", Czech.Culture), @Display.Units.TimeWithSeconds(entry.Time.DateTime) · @entry.Reference</span>
+                            </span>
+                            <span class="entry-source">@entry.Source</span>
+                            <span class="row-sub">@entry.Message</span>
+                        </button>
+                        @if (open)
+                        {
+                            <pre class="entry-detail">@entry.Detail</pre>
+                        }
+                    </div>
+                }
+            </div>
+            <span class="group-note">Uloženo v tomto zařízení v <span class="path">@ErrorLog.FilePath</span>. Jak protokol roste, starší záznamy se mažou.</span>
+        </section>
+
+        @if (entries.Count > 0)
+        {
+            <div class="actions">
+                <button type="button" class="primary-btn" @onclick="ShareAsync">Sdílet soubor protokolu</button>
+                <button type="button" class="primary-btn secondary" @onclick="Log.Clear">Vymazat protokol</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    IReadOnlyList<ErrorLogEntry> entries = [];
+    readonly HashSet<string> expanded = [];
+
+    protected override void OnInitialized()
+    {
+        entries = Log.Read();
+        Log.Changed += OnChanged;
+    }
+
+    void Toggle(string reference)
+    {
+        if (!expanded.Remove(reference)) expanded.Add(reference);
+    }
+
+    Task ShareAsync() => Share.Default.RequestAsync(new ShareFileRequest
+    {
+        Title = "Protokol chyb Vibe Weather",
+        File = new ShareFile(ErrorLog.FilePath, "text/plain"),
+    });
+
+    async Task Close() => await JS.InvokeVoidAsync("history.back");
+
+    void OnChanged() => InvokeAsync(() =>
+    {
+        entries = Log.Read();
+        StateHasChanged();
+    });
+
+    public void Dispose() => Log.Changed -= OnChanged;
+}

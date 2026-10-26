@@ -1,0 +1,97 @@
+/* The design's 84px bar includes 26px for the iOS home indicator; on Android the
+   native safe area (MainPage.SafeAreaEdges) reserves the gesture bar instead. */
+.tab-bar {
+    flex: none;
+    height: 64px;
+    display: grid;
+    /* The four tabs share the width; the close button at the end takes only what it needs. */
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    padding: 0 8px 6px;
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+}
+
+    /* NavLink renders the <a>, so it needs ::deep to receive these styles. */
+    .tab-bar ::deep .tab {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-height: 44px;
+        padding-top: 8px;
+        color: var(--mut);
+    }
+
+        .tab-bar ::deep .tab.active {
+            color: var(--ink);
+        }
+
+/* A button, not a link: no browser button look, sized like the tabs. Set apart from them as an action: a divider
+   before it, red, the icon on a soft red circle. */
+.tab-close {
+    /* A muted brick red: marks it as an action without shouting. */
+    --close: oklch(0.57 0.1 28);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    margin-left: 4px;
+    padding: 8px 8px 0 12px;
+    border: 0;
+    background: none;
+    color: var(--close);
+}
+
+    /* Lighter on the dark background, so it reads as clearly as in light mode. */
+    .theme-dark .tab-close {
+        --close: oklch(0.72 0.09 28);
+    }
+
+    .tab-close::before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        bottom: 12px;
+        left: 0;
+        width: 1px;
+        background: var(--line);
+    }
+
+    .tab-close ::deep .icon {
+        /* A 20px icon on a 2px circle: 24px in all, as big as the tabs' icons, so the label lines up with theirs. */
+        box-sizing: content-box;
+        padding: 2px;
+        border-radius: 50%;
+        background: color-mix(in oklch, var(--close) 10%, transparent);
+        stroke: var(--close);
+    }
+
+    .tab-close .tab-label {
+        font-weight: 500;
+        color: var(--close);
+    }
+
+.tab-indicator {
+    position: absolute;
+    top: -1px;
+    width: 28px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: transparent;
+}
+
+.tab-label {
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+.tab-bar ::deep .tab.active .tab-indicator {
+    background: var(--acc);
+}
+
+.tab-bar ::deep .tab.active .tab-label {
+    font-weight: 600;
+}

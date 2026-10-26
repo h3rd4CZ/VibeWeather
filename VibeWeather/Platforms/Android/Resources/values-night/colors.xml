@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Start screen background in the system's dark mode. -->
+    <color name="vw_splash_bg">#0E1013</color>
+</resources>

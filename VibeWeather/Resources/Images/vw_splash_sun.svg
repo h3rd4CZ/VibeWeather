@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 288 288">
+    <!-- Android's splash icon (288 dp box without an icon background): the Orb's sun where the in-app splash
+         (wwwroot/index.html) draws it, i.e. the Orb's 100-unit box at 120 dp, centred. The cloud follows in the app. -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F7BC95" />
+            <stop offset="1" stop-color="#EED49F" />
+        </linearGradient>
+    </defs>
+    <circle cx="156" cy="132" r="34.8" fill="url(#sun)" />
+</svg>

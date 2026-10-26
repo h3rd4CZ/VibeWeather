@@ -1,0 +1,209 @@
+/* --temp, --temp-low and --temp-high are set inline from the current and today's temperatures. */
+.hero {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 20px 20px 18px;
+    border-radius: 28px;
+    background: color-mix(in oklch, var(--temp) var(--hero-mix), var(--surf));
+}
+
+.hero-top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    gap: 12px;
+}
+
+.hero-temp {
+    display: flex;
+    margin-left: -4px;
+    font-size: 120px;
+    font-weight: 300;
+    letter-spacing: -0.07em;
+    line-height: .84;
+}
+
+.hero-cond {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    text-align: right;
+}
+
+    .hero-cond ::deep .hero-icon {
+        margin-bottom: 4px;
+        stroke: var(--temp);
+    }
+
+.hero-cond-name {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+}
+
+.hero-feels {
+    font-size: 14px;
+    color: var(--mut);
+}
+
+.hero-range {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hero-range-labels {
+    display: flex;
+    justify-content: space-between;
+}
+
+.hero-track {
+    position: relative;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--temp-low), var(--temp-high));
+}
+
+.hero-marker {
+    position: absolute;
+    top: -4px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 7px;
+    border: 3px solid var(--ink);
+    background: var(--surf);
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.next-hour {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+}
+
+.next-hour-title {
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+}
+
+.spark {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5px;
+    height: 30px;
+}
+
+.spark-bar {
+    flex: 1;
+    border-radius: 1px;
+}
+
+.next6 {
+    display: block;
+    padding: 14px 8px 10px;
+}
+
+.next6-head {
+    padding: 2px 10px 8px;
+}
+
+.next6-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.next6-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 0;
+}
+
+.next6-label {
+    font: 500 11px var(--font-mono);
+    color: var(--mut);
+}
+
+.next6-temp {
+    font-size: 17px;
+    font-weight: 500;
+}
+
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 112px;
+    padding: 14px 16px;
+    border-radius: 20px;
+    background: var(--surf);
+}
+
+/* Icon and label; the icon takes the text colour unless tinted (humidity blue, sun amber). */
+.tile-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tile-head ::deep .tile-icon {
+    color: var(--mut);
+}
+
+.tile-head ::deep .tile-icon.tone-rain {
+    color: var(--wi-rain);
+}
+
+.tile-head ::deep .tile-icon.tone-sun {
+    color: var(--wi-sun);
+}
+
+.tile-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+/* Wind direction or pressure trend, after the unit. */
+.tile-arrow {
+    display: flex;
+    align-self: center;
+    margin-left: 4px;
+}
+
+.tile-number {
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+}
+
+.tile-unit {
+    font-size: 14px;
+    color: var(--mut);
+}
+
+.tile-sub {
+    font-size: 13px;
+    color: var(--mut);
+}

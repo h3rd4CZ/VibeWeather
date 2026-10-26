@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Vibe Weather</title>
+    <base href="/" />
+    <link rel="stylesheet" href="fonts/fonts.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="VibeWeather.styles.css" />
+    <link rel="icon" href="data:,">
+    <script>
+        // The appearance chosen in the app (light, dark or auto; saved by app.js), applied before the first paint so
+        // the start screen below is light or dark from its first frame.
+        window.vwApplyTheme = function (mode) {
+            var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        };
+        var vwMode = 'auto', vwShift = 0;
+        try {
+            vwMode = localStorage.getItem('vw-theme') || 'auto';
+            // How far the page's centre sits below the screen's (saved by app.js), so the Orb lands on Android's sun.
+            vwShift = parseFloat(localStorage.getItem('vw-splash-shift')) || 0;
+        } catch (e) { }
+        vwApplyTheme(vwMode);
+        document.documentElement.style.setProperty('--vw-splash-shift', vwShift + 'px');
+    </script>
+</head>
+
+<body>
+
+    <!-- Start screen: continues Android's splash (the sun alone, same place and size) with design 1b's motion.
+         app.js fades it out after the app's first render. -->
+    <div id="vw-splash" aria-hidden="true">
+        <svg class="vw-orb" width="120" height="120" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="vw-sun" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="oklch(0.84 0.085 55)" />
+                    <stop offset="1" stop-color="oklch(0.88 0.075 85)" />
+                </linearGradient>
+            </defs>
+            <circle cx="60" cy="40" r="29" fill="url(#vw-sun)" />
+            <g class="vw-cloud">
+                <g class="vw-halo">
+                    <rect x="15" y="56" width="70" height="32" rx="16" />
+                    <circle cx="40" cy="57" r="21" />
+                    <circle cx="63" cy="63" r="16" />
+                </g>
+                <g class="vw-cloud-body">
+                    <rect x="19" y="60" width="62" height="24" rx="12" />
+                    <circle cx="40" cy="57" r="17" />
+                    <circle cx="63" cy="63" r="12" />
+                </g>
+            </g>
+        </svg>
+        <span class="vw-wordmark"><b>Vibe</b> Weather</span>
+        <div class="vw-bar"></div>
+    </div>
+
+    <div id="app"></div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        Došlo k neočekávané chybě.
+        <a href="." class="reload">Načíst znovu</a>
+        <span class="dismiss">✕</span>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+
+</body>
+
+</html>

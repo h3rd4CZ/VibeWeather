@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, zone arrival: a map pin in the Orb's gradient with a transparent hole. -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#EF945F" />
+            <stop offset="1" stop-color="#F2BD68" />
+        </linearGradient>
+    </defs>
+    <path fill="url(#sun)" fill-rule="evenodd"
+          d="M50 12c-16 0-28 12-28 28 0 20 28 48 28 48s28-28 28-48c0-16-12-28-28-28zM50 29a11 11 0 1 0 0 22a11 11 0 1 0 0-22z" />
+</svg>

@@ -1,0 +1,79 @@
+@page "/daily"
+
+<div class="stack">
+    <div class="page-intro">
+        <span class="mono-label">@Weather.DayRange</span>
+        <h1 class="page-title">Předpověď na @Czech.Count(Weather.DayRows.Count, "den", "dny", "dní")</h1>
+    </div>
+
+    <section class="card days">
+        @foreach (var day in Weather.DayRows)
+        {
+            @* Wet days are tinted in their main kind's colour, more strongly the more falls. *@
+            <div class="day @(day.WetColor is null ? "" : "wet") @(day.NewWeek ? "new-week" : "")" style="@DayStyle(day)">
+                <div class="day-row">
+                    <div class="day-when">
+                        <span class="day-name">@day.Name</span>
+                        <span class="day-date">@day.Date</span>
+                    </div>
+                    <WeatherIcon Condition="day.Condition" />
+                    <span class="day-pop">@day.Pop</span>
+                    <span class="day-low">@day.Low</span>
+                    <div class="day-track">
+                        <div class="day-range" style="left:@(day.RangeLeft)%;width:@(day.RangeWidth)%"></div>
+                        @if (day.IsToday)
+                        {
+                            <div class="day-now" style="left:@(day.NowLeft)%"></div>
+                        }
+                    </div>
+                    <span class="day-high">@day.High</span>
+                </div>
+
+                @* Left: a line per kind of precipitation with its amount. Right: the day's strongest wind. *@
+                <div class="day-meta">
+                    <div class="day-kinds">
+                        @foreach (var line in day.Precip)
+                        {
+                            <span class="day-kind">
+                                <span class="day-swatch" style="background:@line.Color"></span>
+                                <span>@line.Name</span>
+                                <span class="day-amount">@line.Amount</span>
+                            </span>
+                        }
+                    </div>
+                    <span class="day-wind">
+                        <span class="wind-arrow" style="transform:rotate(@(day.WindTo)deg)">
+                            <Icon Path="@WeatherIcons.WindArrow" Size="12" StrokeWidth="2.2" />
+                        </span>
+                        @day.Wind
+                    </span>
+                </div>
+
+                @if (day.Open)
+                {
+                    <div class="day-detail">
+                        <p class="day-summary">@day.Summary</p>
+                        <div class="day-stats">
+                            @foreach (var stat in day.Stats)
+                            {
+                                <div class="day-stat">
+                                    <span class="day-stat-key">@stat.Key</span>
+                                    <span class="day-stat-value">@stat.Value</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+
+    // Temperature colours for the range bar and values; for a wet day also its tint (see .day.wet).
+    static string DayStyle(ForecastView.DayRow day) =>
+        $"--temp-low:{day.LowColor};--temp-high:{day.HighColor}"
+        + (day.WetColor is null ? "" : $";--wet:{day.WetColor};--wet-mix:{day.WetMix}");
+}

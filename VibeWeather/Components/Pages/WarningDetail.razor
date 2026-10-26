@@ -1,0 +1,46 @@
+@page "/warning/{Id}"
+@inject SevereWeatherMonitor Severe
+@inject DisplaySettings Display
+
+<div class="stack">
+    @if (Severe.Find(Id) is { } warning)
+    {
+        <div class="page-intro">
+            <span class="mono-label">VÝSTRAHA · @warning.Source.ToUpper(Czech.Culture)</span>
+            <h1 class="page-title">@warning.Name</h1>
+            <span class="page-sub">@WarningText.Period(warning, Display.Units, DateTimeOffset.Now)</span>
+        </div>
+
+        <section class="card warning-facts">
+            <div class="fact"><span class="fact-key">Oblast</span><span class="fact-value">@warning.Area</span></div>
+            <div class="fact"><span class="fact-key">Od</span><span class="fact-value">@When(warning.Start)</span></div>
+            <div class="fact"><span class="fact-key">Do</span><span class="fact-value">@When(warning.End)</span></div>
+            <div class="fact"><span class="fact-key">Stav</span><span class="fact-value">@WarningText.Status(warning.Status)</span></div>
+            <div class="fact"><span class="fact-key">Vydal</span><span class="fact-value">@warning.Source</span></div>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(warning.Details))
+        {
+            <section class="card warning-details">@warning.Details</section>
+        }
+        @if (!string.IsNullOrWhiteSpace(warning.Disclaimer))
+        {
+            <p class="warning-disclaimer">@warning.Disclaimer</p>
+        }
+    }
+    else
+    {
+        <div class="page-intro">
+            <span class="mono-label">VÝSTRAHA</span>
+            <h1 class="page-title">Výstraha už neplatí</h1>
+            <a class="page-sub" href="">Zpět na předpověď</a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+
+    // "st 14. 10. 15:00", in the place's clock.
+    string When(DateTimeOffset t) => $"{t.DateTime.ToString("ddd d. M.", Czech.Culture)} {Display.Units.Time(t.DateTime)}";
+}

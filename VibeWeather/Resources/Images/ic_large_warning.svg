@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100">
+    <!-- Notification picture, severe warning: a rounded triangle in the Orb's gradient with an ink "!". -->
+    <defs>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#EF945F" />
+            <stop offset="1" stop-color="#F2BD68" />
+        </linearGradient>
+    </defs>
+    <path d="M50 18L84 78H16Z" fill="url(#sun)" stroke="url(#sun)" stroke-width="10" stroke-linejoin="round" />
+    <path d="M50 40v17M50 68v.5" fill="none" stroke="#15171C" stroke-width="8" stroke-linecap="round" />
+</svg>

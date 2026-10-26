@@ -1,0 +1,74 @@
+@page "/"
+
+<div class="stack">
+    <WarningBanner />
+    <section class="hero" style="--temp:@Weather.TempColor;--temp-low:@Weather.TodayLowColor;--temp-high:@Weather.TodayHighColor">
+        <div class="hero-top">
+            <div class="hero-temp"><span>@Weather.CurrentTemp</span><span>°</span></div>
+            <div class="hero-cond">
+                <WeatherIcon Condition="Weather.CurrentCondition" Size="60" StrokeWidth="1.3" Class="hero-icon" />
+                <span class="hero-cond-name">@Weather.CurrentDescription</span>
+                <span class="hero-feels">@Weather.FeelsLike</span>
+            </div>
+        </div>
+        <div class="hero-range">
+            <div class="mono-label tight hero-range-labels">
+                <span>MIN. @Weather.TodayLow</span><span>DNES</span><span>MAX. @Weather.TodayHigh</span>
+            </div>
+            <div class="hero-track">
+                <div class="hero-marker" style="left:@(Weather.NowMarkerLeft)%"></div>
+            </div>
+        </div>
+    </section>
+
+    <a href="next-hour" class="card next-hour">
+        <div class="card-head mono-label"><span>@Weather.MinuteShortHeading</span><span>CELKEM @Weather.MinuteTotal&nbsp;&nbsp;→</span></div>
+        <div class="next-hour-title">@Weather.SummaryTitle</div>
+        <div class="spark">
+            @foreach (var bar in Weather.Spark)
+            {
+                <div class="spark-bar" style="height:@(bar.Height)px;background:@bar.Color"></div>
+            }
+        </div>
+    </a>
+
+    <a href="hourly" class="card next6">
+        <div class="card-head mono-label next6-head"><span>PŘÍŠTÍCH 6 HODIN</span><span>→</span></div>
+        <div class="next6-grid">
+            @foreach (var hour in Weather.Next6)
+            {
+                <div class="next6-item">
+                    <span class="next6-label">@hour.Label</span>
+                    <WeatherIcon Condition="hour.Condition" />
+                    <span class="next6-temp">@hour.Temp</span>
+                </div>
+            }
+        </div>
+    </a>
+
+    <div class="tiles">
+        @foreach (var tile in Weather.Tiles)
+        {
+            <div class="tile">
+                <span class="tile-head">
+                    <Icon Path="@tile.Icon" Size="16" StrokeWidth="1.8" Class="@($"tile-icon {tile.Tone}")" />
+                    <span class="mono-label">@tile.Key</span>
+                </span>
+                <div class="tile-value">
+                    <span class="tile-number">@tile.Value</span><span class="tile-unit">@tile.Unit</span>
+                    @if (tile.Arrow is { } turn)
+                    {
+                        <span class="tile-arrow" style="transform:rotate(@(turn)deg)">
+                            <Icon Path="@WeatherIcons.WindArrow" Size="18" StrokeWidth="2.2" />
+                        </span>
+                    }
+                </div>
+                <span class="tile-sub">@tile.Sub</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] public ForecastView Weather { get; set; } = default!;
+}
