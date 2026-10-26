@@ -1,0 +1,55 @@
+#:include ../VibeWeather/Data/ForecastView.cs
+#:include ../VibeWeather/Data/WeatherCodes.cs
+#:include ../VibeWeather/Data/WeatherIcons.cs
+#:include ../VibeWeather/Data/WeatherModels.cs
+#:include ../VibeWeather/Data/DisplayUnits.cs
+#:include ../VibeWeather/Data/Czech.cs
+// Checks ForecastView's hourly days (scrubber segments, heading, links from the daily rows): run with
+// `dotnet run hourly-days.cs` from this folder. Exit code 1 on failure.
+using VibeWeather.Data;
+
+int failures = 0;
+void Check(string what, bool ok) { Console.WriteLine($"{(ok ? "ok  " : "FAIL")} {what}"); if (!ok) failures++; }
+
+// Monday 26 October 2026, 20:30; the hours start at 20:00.
+var now = new DateTime(2026, 10, 26, 20, 30, 0);
+var start = new DateTime(2026, 10, 26, 20, 0, 0);
+
+ForecastView View(int hourCount, int dayCount)
+{
+    var hours = Enumerable.Range(0, hourCount).Select(i => new HourForecast(
+        start.AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, 0)).ToList();
+    var days = Enumerable.Range(0, dayCount).Select(i =>
+    {
+        var date = DateOnly.FromDateTime(now).AddDays(i);
+        return new DayForecast(date, 1, 12, 4, 0, 10, 180, 1, 0,
+            date.ToDateTime(new TimeOnly(7, 0)), date.ToDateTime(new TimeOnly(17, 0)));
+    }).ToList();
+    var current = new CurrentConditions(now, 10, 9, 1, false, 80, 5, 5, 8, 180, 1015, 10, 0);
+    var forecast = new Forecast(new WeatherLocation("Ostrava", "Česko", 49.83, 18.28), now, current, hours, [], days);
+    return new ForecastView(forecast, DisplayUnits.Default);
+}
+
+// 52 hours: 4 today (20:00–23:00), all of Tuesday and Wednesday; the daily forecast has a fourth day without hours.
+var v = View(52, 4);
+Check("three days", v.HourDays.Count == 3);
+Check("today first, from now", v.HourDays[0] is { Weekday: "Dnes", DayOfMonth: "26", FirstColumn: 0, Left: "0.0", Width: "7.7" });
+Check("tomorrow", v.HourDays[1] is { Weekday: "Út", DayOfMonth: "27", FirstColumn: 4, Left: "7.7", Width: "46.2" });
+Check("third day", v.HourDays[2] is { Weekday: "St", DayOfMonth: "28", FirstColumn: 28, Left: "53.8", Width: "46.2" });
+Check("short today has no label", !v.HourDays[0].Labelled && v.HourDays[1].Labelled);
+Check("heading for three days", v.HourHeading == "PŘÍŠTÍ 3 DNY");
+Check("daily row with hours links to its day", v.DayRows[1].HourlyLink == "hourly?day=2026-10-27");
+Check("today's row links too", v.DayRows[0].HourlyLink == "hourly?day=2026-10-26");
+Check("daily row without hours has no link", v.DayRows[3].HourlyLink is null);
+
+// 16 days of hours: 4 today, then 15 full days.
+v = View(4 + 15 * 24, 16);
+Check("sixteen days", v.HourDays.Count == 16);
+Check("heading for sixteen days", v.HourHeading == "PŘÍŠTÍCH 16 DNÍ");
+Check("every daily row links", v.DayRows.All(d => d.HourlyLink is not null));
+
+v = View(0, 3);
+Check("no hours: no days, no links", v.HourDays.Count == 0 && v.DayRows.All(d => d.HourlyLink is null));
+
+Console.WriteLine(failures == 0 ? "ALL OK" : $"{failures} FAILED");
+return failures == 0 ? 0 : 1;

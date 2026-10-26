@@ -26,6 +26,12 @@ public sealed class ForecastView
     public sealed record BarInfo(string Time, string Rate, string? Snow, string Kind, string KindColor, string Reflectivity, string Center, double Strength);
     /// <summary>A dashed line across the Next hour chart, Bottom px above its foot, labelled "20 dBZ".</summary>
     public sealed record GridLine(string Label, int Bottom);
+    /// <summary>
+    /// A calendar day in the hourly chart, for its scrubber: Weekday "Dnes" or "Út" over DayOfMonth "27"; FirstColumn
+    /// is its first hour's column, Left and Width where its segment sits along the track (percent). Labelled when it
+    /// has hours enough (<see cref="LabelledDayHours"/>) for its labels to fit.
+    /// </summary>
+    public sealed record HourDay(DateOnly Date, string Weekday, string DayOfMonth, int FirstColumn, string Left, string Width, bool Labelled);
 
     /// <summary>A colour along a gradient, at Offset percent of its length.</summary>
     public sealed record GradientStop(string Offset, string Color);
@@ -44,16 +50,19 @@ public sealed class ForecastView
     /// WetMix how strongly ("6%" to "24%", by the day's total), so heavier days stand out more. Null when dry.</param>
     /// <param name="LowColor">CSS colour for the low temperature, as on the Now tab; HighColor likewise.</param>
     /// <param name="Wind">The day's strongest wind, "13 km/h"; WindTo is where it blows to (arrow rotation, degrees).</param>
+    /// <param name="HourlyLink">"hourly?day=2026-10-27" when the hourly forecast reaches the day; else null.</param>
     public sealed record DayRow(
         string Name, string Date, WeatherCondition Condition, string Pop, string Low, string High, string LowColor, string HighColor,
         string RangeLeft, string RangeWidth, bool IsToday, string NowLeft,
         bool Open, string Summary, IReadOnlyList<Stat> Stats, IReadOnlyList<DayPrecipLine> Precip,
-        string? WetColor, string? WetMix, string Wind, int WindTo, bool NewWeek);
+        string? WetColor, string? WetMix, string Wind, int WindTo, bool NewWeek, string? HourlyLink);
 
     /// <param name="Amount">"4,2 mm" (water) or "2 cm" (new snow).</param>
     public sealed record DayPrecipLine(string Name, string Color, string Amount);
 
     const int HourColumnWidth = 56;
+    // A day with fewer hours than this (today late, the last day early) is too narrow in the scrubber for its labels.
+    const int LabelledDayHours = 12;
     // The Next hour bars stand on a radar reflectivity scale from 0 to MaxDbz, which is BarArea px tall.
     const double MaxDbz = 60;
     const int BarArea = 116;
@@ -108,8 +117,12 @@ public sealed class ForecastView
     public string ReadingColor { get; }
     public IReadOnlyList<Stat> Events { get; }
 
-    // Hourly (three days)
+    // Hourly (as many days as the source has hours for)
     public string HourHeadline { get; }
+    /// <summary>"PŘÍŠTÍ 3 DNY", "PŘÍŠTÍCH 16 DNÍ": how many calendar days the hours reach into.</summary>
+    public string HourHeading { get; }
+    /// <summary>The calendar days in <see cref="HourColumns"/>, in order.</summary>
+    public IReadOnlyList<HourDay> HourDays { get; }
     public IReadOnlyList<HourColumn> HourColumns { get; }
     /// <summary>The kinds of precipitation in the hourly bars; empty when all hours are dry.</summary>
     public IReadOnlyList<LegendItem> HourLegend { get; }
@@ -342,6 +355,22 @@ public sealed class ForecastView
             WindTo: DownWind(h.WindDirection))).ToList();
         HourLegend = hours.Where(IsWet).Select(h => h.Type).Distinct().Order()
             .Select(t => new LegendItem(PrecipName(t), PrecipColor(3, t))).ToList();
+        // One scrubber segment per calendar day, as wide as its share of the hours.
+        HourDays = hours.Select((h, i) => (Date: DateOnly.FromDateTime(h.Time), Column: i))
+            .GroupBy(x => x.Date)
+            .Select(g => new HourDay(g.Key,
+                g.Key == DateOnly.FromDateTime(now) ? "Dnes" : DayOfWeek(g.Key),
+                g.Key.Day.ToString(Inv),
+                g.First().Column,
+                Pct((double)g.First().Column / hours.Count),
+                Pct((double)g.Count() / hours.Count),
+                g.Count() >= LabelledDayHours)).ToList();
+        HourHeading = HourDays.Count switch
+        {
+            <= 1 => "DNES",
+            < 5 => $"PŘÍŠTÍ {HourDays.Count} DNY",
+            _ => $"PŘÍŠTÍCH {HourDays.Count} DNÍ",
+        };
         if (hours.Count > 0)
         {
             // The headline is about the coming 24 hours; the curve shows all three days.
@@ -409,7 +438,8 @@ public sealed class ForecastView
             Wind: units.WindSpeed(d.Wind),
             WindTo: DownWind(d.WindDirection),
             // A Monday after the first row starts a new week, set apart by a little space.
-            NewWeek: i > 0 && d.Date.DayOfWeek == System.DayOfWeek.Monday)).ToList();
+            NewWeek: i > 0 && d.Date.DayOfWeek == System.DayOfWeek.Monday,
+            HourlyLink: HourDays.Any(h => h.Date == d.Date) ? $"hourly?day={d.Date.ToString("yyyy-MM-dd", Inv)}" : null)).ToList();
     }
 
     /// <summary>A line per kind, "Déšť 4,2 mm" / "Sníh 2 cm"; a total alone when the source gives no split.</summary>
