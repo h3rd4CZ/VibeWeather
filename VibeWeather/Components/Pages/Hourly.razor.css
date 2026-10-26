@@ -34,11 +34,14 @@
         background: var(--line);
     }
 
+/* At most as wide as the day's hours (max-width set inline), so it never runs into the next day's label. */
 .hour-day {
     position: absolute;
     top: 8px;
     left: 8px;
     z-index: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     font: 600 10.5px var(--font-mono);
     letter-spacing: .06em;

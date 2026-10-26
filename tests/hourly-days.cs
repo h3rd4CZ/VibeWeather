@@ -15,10 +15,11 @@ void Check(string what, bool ok) { Console.WriteLine($"{(ok ? "ok  " : "FAIL")} 
 var now = new DateTime(2026, 10, 26, 20, 30, 0);
 var start = new DateTime(2026, 10, 26, 20, 0, 0);
 
-ForecastView View(int hourCount, int dayCount, Func<int, double>? precipitation = null, Func<DayForecast, DayForecast>? day = null)
+ForecastView View(int hourCount, int dayCount, Func<int, double>? precipitation = null, Func<DayForecast, DayForecast>? day = null,
+    DateTime? from = null)
 {
     var hours = Enumerable.Range(0, hourCount).Select(i => new HourForecast(
-        start.AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, precipitation?.Invoke(i) ?? 0)).ToList();
+        (from ?? start).AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, precipitation?.Invoke(i) ?? 0)).ToList();
     var days = Enumerable.Range(0, dayCount).Select(i =>
     {
         var date = DateOnly.FromDateTime(now).AddDays(i);
@@ -62,6 +63,14 @@ v = View(0, 3, day: d => d.Date.Day switch { 26 => d with { Pop = 40 }, 27 => d 
 Check("dry day with a chance: no chance shown", v.DayRows[0].Pop == "");
 Check("wet day: chance shown", v.DayRows[1].Pop == "40%");
 Check("wet day with a low chance: shown too", v.DayRows[2].Pop == "10%");
+
+// A day's label in the chart fits its own hours (56 px each, less 16): today's last hour gets just its name.
+v = View(25, 2, precipitation: _ => 2, from: new DateTime(2026, 10, 26, 23, 0, 0));
+Check("one hour today: short label", v.HourColumns[0] is { Day: "Dnes", DayWidth: 40 });
+Check("full day: full label", v.HourColumns[1] is { Day: "Zítra · 27. 10. · 48,0 mm", DayWidth: 1328 });
+Check("label only where a day starts", v.HourColumns[2] is { Day: null, DayWidth: 0 });
+v = View(26, 2, precipitation: _ => 2, from: new DateTime(2026, 10, 26, 22, 0, 0));
+Check("two hours today: name and amount fit", v.HourColumns[0].Day == "Dnes · 4,0 mm");
 
 v = View(0, 3);
 Check("no hours: no days, no links", v.HourDays.Count == 0 && v.DayRows.All(d => d.HourlyLink is null));

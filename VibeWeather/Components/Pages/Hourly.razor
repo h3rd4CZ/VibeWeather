@@ -17,7 +17,7 @@
                         <div class="hour-col @(col.Selected ? "selected" : "") @(col.Day is null ? "" : "day-start")">
                             @if (col.Day is not null)
                             {
-                                <span class="hour-day">@col.Day</span>
+                                <span class="hour-day" style="max-width:@(col.DayWidth)px">@col.Day</span>
                             }
                             <span class="hour-label">@col.Label</span>
                             <WeatherIcon Condition="col.Condition" Class="hour-icon" />

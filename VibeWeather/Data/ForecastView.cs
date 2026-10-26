@@ -39,13 +39,14 @@ public sealed class ForecastView
     public sealed record GradientStop(string Offset, string Color);
     public sealed record Stat(string Key, string Value);
     public sealed record HourCell(string Label, WeatherCondition Condition, string Temp);
-    /// <param name="Day">Set on the first hour of each day: "Dnes", "Zítra · 13. 10. · 4,2 mm", "St · 14. 10.".</param>
+    /// <param name="Day">Set on the first hour of each day: "Dnes", "Zítra · 13. 10. · 4,2 mm", "St · 14. 10."; shorter when
+    /// the day has too few hours for it. DayWidth is the room it has (px), the width of the day's hours; 0 without a Day.</param>
     /// <param name="Precip">The hour's precipitation bar, coloured by kind; null when dry.</param>
     /// <param name="Amount">What falls in the hour, "1,2 mm" or for snow "0,8 cm"; null when dry.</param>
     /// <param name="Wind">Wind speed as a number in the chosen unit (see <see cref="WindUnit"/>).</param>
     /// <param name="WindTo">Where the wind blows to, in degrees: the rotation of an arrow pointing up.</param>
     public sealed record HourColumn(string Label, WeatherCondition Condition, string Temp, int TempTop, string Pop, bool PopHigh, bool Selected,
-        string? Day, Bar? Precip, string? Amount, string Wind, int WindTo);
+        string? Day, int DayWidth, Bar? Precip, string? Amount, string Wind, int WindTo);
     /// <param name="Date">"12. 10.".</param>
     /// <param name="Precip">One line per kind that falls, "Déšť 4,2 mm", "Sníh 2 cm", in its chart colour; empty when dry.</param>
     /// <param name="WetColor">For a wet day, the colour of its main kind (most of it falls as that), which tints the row;
@@ -63,6 +64,8 @@ public sealed class ForecastView
     public sealed record DayPrecipLine(string Name, string Color, string Amount);
 
     const int HourColumnWidth = 56;
+    // About the width of a character of a day's label in the hourly chart (10.5 px mono capitals, .06em apart).
+    const int DayLabelCharWidth = 7;
     // A day with fewer hours than this (today late, the last day early) is too narrow in the scrubber for its labels.
     const int LabelledDayHours = 12;
     // The Next hour bars stand on a radar reflectivity scale from 0 to MaxDbz, which is BarArea px tall.
@@ -345,10 +348,21 @@ public sealed class ForecastView
         string DayLabel(DateTime time) => dayTotals.TryGetValue(time.Date, out var total) && total.Water >= DayForecast.MinAmount
             ? $"{DayName(time, now)} · {D1(total.Water)} mm" + (total.Snow >= MinSnowCm ? $" · ≈ {SnowAmount(total.Snow)} sněhu" : "")
             : DayName(time, now);
+        // A day's label has the width of its own hours, less the 8 px inset and 8 px before the next day's line; a day
+        // with few hours (today late in the evening) gets a shorter label rather than run into the next one.
+        var dayHours = hours.GroupBy(h => h.Time.Date).ToDictionary(g => g.Key, g => g.Count());
+        int DayRoom(DateTime time) => dayHours[time.Date] * HourColumnWidth - 16;
+        string DayHeader(DateTime time)
+        {
+            string[] labels = [DayLabel(time), DayName(time, now), ShortDayName(time, now)];
+            return labels.FirstOrDefault(l => l.Length * DayLabelCharWidth <= DayRoom(time)) ?? labels[^1];
+        }
+        bool StartsDay(int i) => i == 0 || hours[i].Time.Date != hours[i - 1].Time.Date;
         HourColumns = hours.Select((h, i) => new HourColumn(
             i == 0 ? "Teď" : HourLabel(h.Time), WeatherCodes.Condition(h.Code, h.IsDay, h.Sun), Temp(h.Temp),
             Round(points[i].Y - 30), $"{h.Pop}%", h.Pop >= 30, i == selected,
-            Day: i == 0 || h.Time.Date != hours[i - 1].Time.Date ? DayLabel(h.Time) : null,
+            Day: StartsDay(i) ? DayHeader(h.Time) : null,
+            DayWidth: StartsDay(i) ? DayRoom(h.Time) : 0,
             Precip: IsWet(h)
                 ? new Bar(Round(3 + 23 * Math.Min(1, Math.Sqrt(h.Precipitation / 6))), PrecipColor(h.Precipitation, h.Type))
                 : null,
@@ -525,6 +539,14 @@ public sealed class ForecastView
         <= 0 => "Dnes",
         1 => $"Zítra · {time.ToString("d. M.", Cs)}",
         _ => $"{Cap(time.ToString("ddd", Cs))} · {time.ToString("d. M.", Cs)}",
+    };
+
+    /// <summary>"Dnes", "Zítra", "St": for a day with too few hours in the chart for <see cref="DayName"/>.</summary>
+    static string ShortDayName(DateTime time, DateTime now) => (time.Date - now.Date).Days switch
+    {
+        <= 0 => "Dnes",
+        1 => "Zítra",
+        _ => Cap(time.ToString("ddd", Cs)),
     };
 
     // Wind directions say where it comes from; arrows show where it goes.
