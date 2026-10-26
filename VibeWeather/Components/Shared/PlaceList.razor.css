@@ -38,7 +38,7 @@
     font-weight: 400;
 }
 
-/* The device position, always first: tinted across the card's width (its 16 px padding) and marked with a pin. */
+/* The device position, always first: tinted across the card's width (its 16 px padding), a pin after its name. */
 .loc-row.device {
     width: calc(100% + 32px);
     margin: 0 -16px;

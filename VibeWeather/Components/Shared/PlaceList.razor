@@ -12,11 +12,11 @@
         <span class="loc-check @(loc.Key == State.SelectedKey ? "on" : "")">✓</span>
         <div class="row-text">
             <span class="loc-name-line">
+                <span class="loc-name">@loc.Name</span>
                 @if (loc.IsDevice)
                 {
                     <Icon Path="@WeatherIcons.Pin" Size="16" StrokeWidth="2" Class="loc-pin" />
                 }
-                <span class="loc-name">@loc.Name</span>
                 @if (fence is not null)
                 {
                     <span class="chip-inside">UVNITŘ</span>
