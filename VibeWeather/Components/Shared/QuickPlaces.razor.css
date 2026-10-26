@@ -1,0 +1,79 @@
+/* Bottom right, just above the tab bar (64 px); .app-content leaves room under its last card for it. */
+.quick-btn {
+    position: absolute;
+    right: 16px;
+    bottom: 80px;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--acc);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .22);
+}
+
+.quick-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, .35);
+    animation: quick-fade .2s ease-out;
+}
+
+/* Above the dimmed screen, from the bottom; long lists scroll inside it. */
+.quick-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 41;
+    max-height: 80%;
+    overflow-y: auto;
+    padding: 8px 16px 24px;
+    border-radius: 22px 22px 0 0;
+    background: var(--bg);
+    animation: quick-rise .22s ease-out;
+}
+
+.quick-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4px 12px;
+}
+
+.quick-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.quick-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surf);
+    color: var(--ink);
+}
+
+@keyframes quick-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes quick-rise {
+    from {
+        transform: translateY(100%);
+    }
+}

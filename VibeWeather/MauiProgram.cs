@@ -37,6 +37,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<LocationSelection>();
 		builder.Services.AddSingleton<DisplaySettings>();
 		builder.Services.AddSingleton<WeatherState>();
+		builder.Services.AddSingleton<PlacePicker>();
 		builder.Services.AddSingleton<ThemeService>();
 		builder.Services.AddSingleton<PrecipAlertMonitor>();
 		builder.Services.AddSingleton<MorningSummaryService>();

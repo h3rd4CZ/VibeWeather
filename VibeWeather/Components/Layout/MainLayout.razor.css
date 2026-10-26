@@ -41,7 +41,8 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 0 20px 24px;
+    /* Room under the last card for the quick place button (52 px, 16 px above the tab bar). */
+    padding: 0 20px 92px;
 }
 
 .status {

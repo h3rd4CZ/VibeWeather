@@ -1,0 +1,42 @@
+@* The quickest way to another place: a floating button over the main tabs opens a sheet with the same places as
+   Settings; a tap takes one and closes the sheet. ✕, a tap beside the sheet or Back close it unchanged. *@
+@implements IDisposable
+@inject PlacePicker Picker
+
+<button type="button" class="quick-btn" aria-label="Změnit místo" @onclick="Picker.Open">
+    <Icon Path="@WeatherIcons.Pin" Size="24" StrokeWidth="1.9" />
+</button>
+
+@if (Picker.IsOpen)
+{
+    @* Back with pages behind (and any other navigation) only closes the sheet; Back without them is MainPage's. *@
+    <NavigationLock OnBeforeInternalNavigation="CloseInstead" />
+    <div class="quick-backdrop" @onclick="Close"></div>
+    <section class="quick-sheet" role="dialog" aria-label="Místa">
+        <header class="quick-head">
+            <h2 class="quick-title">Místa</h2>
+            <button type="button" class="quick-close" aria-label="Zavřít" @onclick="Close">
+                <Icon Path="@WeatherIcons.TabClose" Size="20" StrokeWidth="2" />
+            </button>
+        </header>
+        <div class="group-card">
+            <PlaceList OnSelected="Close" />
+        </div>
+    </section>
+}
+
+@code {
+    protected override void OnInitialized() => Picker.Changed += OnChanged;
+
+    void OnChanged() => InvokeAsync(StateHasChanged);
+
+    void Close() => Picker.Close();
+
+    void CloseInstead(LocationChangingContext context)
+    {
+        context.PreventNavigation();
+        Picker.Close();
+    }
+
+    public void Dispose() => Picker.Changed -= OnChanged;
+}

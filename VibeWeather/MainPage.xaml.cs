@@ -24,6 +24,8 @@ public partial class MainPage : ContentPage
 	// page but Teď it goes to Teď instead.
 	protected override bool OnBackButtonPressed()
 	{
+		// An open quick place picker closes first, wherever it was opened.
+		if (Handler?.MauiContext?.Services.GetService<PlacePicker>()?.Close() == true) return true;
 		var weather = Handler?.MauiContext?.Services.GetService<WeatherState>();
 		if (weather is null || weather.CurrentRoute.Length == 0) return base.OnBackButtonPressed();
 		weather.ShowHome();
