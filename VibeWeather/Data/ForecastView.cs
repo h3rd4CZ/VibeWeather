@@ -32,6 +32,8 @@ public sealed class ForecastView
     /// has hours enough (<see cref="LabelledDayHours"/>) for its labels to fit.
     /// </summary>
     public sealed record HourDay(DateOnly Date, string Weekday, string DayOfMonth, int FirstColumn, string Left, string Width, bool Labelled);
+    /// <summary>A wet hour along the scrubber's track: its column, and its bar's top and height in a 20-unit-high track.</summary>
+    public sealed record ScrubBar(int Column, string Y, string Height, string Color);
 
     /// <summary>A colour along a gradient, at Offset percent of its length.</summary>
     public sealed record GradientStop(string Offset, string Color);
@@ -123,6 +125,8 @@ public sealed class ForecastView
     public string HourHeading { get; }
     /// <summary>The calendar days in <see cref="HourColumns"/>, in order.</summary>
     public IReadOnlyList<HourDay> HourDays { get; }
+    /// <summary>The wet hours of <see cref="HourColumns"/>, drawn along the scrubber's track.</summary>
+    public IReadOnlyList<ScrubBar> HourScrubBars { get; }
     public IReadOnlyList<HourColumn> HourColumns { get; }
     /// <summary>The kinds of precipitation in the hourly bars; empty when all hours are dry.</summary>
     public IReadOnlyList<LegendItem> HourLegend { get; }
@@ -365,6 +369,13 @@ public sealed class ForecastView
                 Pct((double)g.First().Column / hours.Count),
                 Pct((double)g.Count() / hours.Count),
                 g.Count() >= LabelledDayHours)).ToList();
+        // On the scale of the hourly bars (6 mm/h fills it), up to 16 of the track's 20 units.
+        HourScrubBars = hours.Select((h, i) => (Hour: h, Column: i)).Where(x => IsWet(x.Hour))
+            .Select(x =>
+            {
+                double height = 3 + 13 * Math.Min(1, Math.Sqrt(x.Hour.Precipitation / 6));
+                return new ScrubBar(x.Column, F1(20 - height), F1(height), PrecipColor(x.Hour.Precipitation, x.Hour.Type));
+            }).ToList();
         HourHeading = HourDays.Count switch
         {
             <= 1 => "DNES",

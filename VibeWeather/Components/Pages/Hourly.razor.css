@@ -281,6 +281,15 @@
     border-radius: 10px;
     background: var(--dry);
     touch-action: none;
+    overflow: hidden;
+}
+
+/* The wet hours, stretched over the whole track (one SVG unit per hour). */
+.scrub-precip {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 /* Midnight between two days. */

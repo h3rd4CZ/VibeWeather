@@ -15,10 +15,10 @@ void Check(string what, bool ok) { Console.WriteLine($"{(ok ? "ok  " : "FAIL")} 
 var now = new DateTime(2026, 10, 26, 20, 30, 0);
 var start = new DateTime(2026, 10, 26, 20, 0, 0);
 
-ForecastView View(int hourCount, int dayCount)
+ForecastView View(int hourCount, int dayCount, Func<int, double>? precipitation = null)
 {
     var hours = Enumerable.Range(0, hourCount).Select(i => new HourForecast(
-        start.AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, 0)).ToList();
+        start.AddHours(i), 10, 9, 1, true, 0, 5, 80, 5, 0, 1015, precipitation?.Invoke(i) ?? 0)).ToList();
     var days = Enumerable.Range(0, dayCount).Select(i =>
     {
         var date = DateOnly.FromDateTime(now).AddDays(i);
@@ -47,6 +47,14 @@ v = View(4 + 15 * 24, 16);
 Check("sixteen days", v.HourDays.Count == 16);
 Check("heading for sixteen days", v.HourHeading == "PŘÍŠTÍCH 16 DNÍ");
 Check("every daily row links", v.DayRows.All(d => d.HourlyLink is not null));
+
+// Wet hours are drawn along the scrubber's track: column, top and height in a 20-unit-high track, colour by kind.
+v = View(52, 4, i => i switch { 5 => 0.5, 30 => 6, _ => 0 });
+Check("a bar per wet hour", v.HourScrubBars.Count == 2);
+Check("light rain: short bar", v.HourScrubBars[0] is { Column: 5, Y: "13.2", Height: "6.8" });
+Check("heavy rain: full bar", v.HourScrubBars[1] is { Column: 30, Y: "4.0", Height: "16.0" });
+Check("bars in the rain colour", v.HourScrubBars.All(b => b.Color.Contains(" 252)")));
+Check("dry hours: no bars", View(52, 4).HourScrubBars.Count == 0);
 
 v = View(0, 3);
 Check("no hours: no days, no links", v.HourDays.Count == 0 && v.DayRows.All(d => d.HourlyLink is null));

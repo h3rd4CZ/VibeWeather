@@ -81,6 +81,13 @@
                 }
             </div>
             <div class="scrub-track">
+                @* Each wet hour as a bar in its kind's colour, so wet days show along the whole range. *@
+                <svg class="scrub-precip" viewBox="0 0 @Weather.HourColumns.Count 20" preserveAspectRatio="none" aria-hidden="true">
+                    @foreach (var bar in Weather.HourScrubBars)
+                    {
+                        <rect x="@bar.Column" y="@bar.Y" width="1" height="@bar.Height" style="fill:@bar.Color"></rect>
+                    }
+                </svg>
                 @foreach (var day in Weather.HourDays.Skip(1))
                 {
                     <span class="scrub-tick" style="left:@(day.Left)%"></span>
